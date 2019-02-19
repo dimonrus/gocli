@@ -1,0 +1,7 @@
+depends:
+project:
+  name: dna
+  debug: false
+web:
+  port: 8080
+  host: 0.0.0.0

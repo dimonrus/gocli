@@ -1,0 +1,3 @@
+depends: global
+project:
+  debug: true

@@ -1,0 +1,4 @@
+depends: qa
+web:
+  port: 8000
+
