@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"os"
-	"testing"
 )
 
 type Config struct {
@@ -17,33 +17,34 @@ type Config struct {
 	Arguments Arguments
 }
 
-func TestName(t *testing.T) {
+func main() {
 	var config Config
 	environment := os.Getenv("ENV")
 	if environment == "" {
-		t.Fatal("ENV is not defined")
+		panic("ENV is not defined")
 	}
 
 	app := DNApp{}.New(environment, &config)
 	app.ParseFlags(&config.Arguments)
 
 	if appType, ok := config.Arguments["app"]; ok == true {
-		switch appType.Value {
+		value := appType.Value.(*string)
+		switch *value {
 		case ApplicationTypeWeb:
 			err := app.Start(config.Arguments)
 			if err != nil {
-				t.Fatal(err)
+				app.FatalError(err)
 			}
 		default:
-			t.Fatal("wrong type")
+			app.FatalError(errors.New("wrong type"))
 		}
 	}
 
 	if !config.Project.Debug {
-		t.Fatal("debug mast be false")
+		app.FatalError(errors.New("debug mast be false"))
 	}
 
 	if config.Web.Port != 8000 {
-		t.Fatal("incorrect port")
+		app.FatalError(errors.New("incorrect port"))
 	}
 }

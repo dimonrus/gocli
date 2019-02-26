@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -73,4 +75,26 @@ func (a DNApp) New(env string, config interface{}) Application {
 		a.FatalError(err)
 	}
 	return &a
+}
+
+// Parse console arguments
+func (a DNApp) ParseFlags(args *Arguments) {
+	for key, argument := range *args {
+		switch argument.Type {
+		case ArgumentTypeString:
+			var value string
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.StringVar(&value, key, "", argument.Label)
+		case ArgumentTypeInt:
+			var value int64
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.Int64Var(&value, key, 0, argument.Label)
+		default:
+			a.FatalError(errors.New("not implemented argument type"))
+		}
+	}
+	flag.Parse()
+
 }

@@ -5,3 +5,13 @@ project:
 web:
   port: 8080
   host: 0.0.0.0
+arguments:
+  app:
+    type: string
+    label: application type
+  script:
+    type: string
+    label: console command name
+  consumer:
+    type: string
+    label: consumer name
