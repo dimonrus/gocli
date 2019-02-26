@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -12,6 +13,7 @@ import (
 // Dynamic Name Application
 type DNApp struct {
 	config interface{}
+	logger *logger
 }
 
 // Get config struct
@@ -35,24 +37,40 @@ func (a DNApp) SetConfig(cfg interface{}) Application {
 }
 
 // Start application
-func (a DNApp) Start(arguments Arguments) ApplicationErrorInterface {
+func (a DNApp) Start(arguments Arguments) ErrorInterface {
 	return nil
+}
+
+// Fatal error
+func (a DNApp) FatalError(err error) {
+	panic(err)
+}
+
+// Get logger
+func (a DNApp) GetLogger(level int) *logger {
+	if a.logger == nil || a.logger.level != level {
+		a.logger = NewLogger(level, "Application: ", log.Ldate|log.Ltime|log.Lshortfile)
+	}
+	return a.logger
 }
 
 // Init app
 func (a DNApp) New(env string, config interface{}) Application {
 	data, err := ioutil.ReadFile(a.GetConfigPath(env))
 	if err != nil {
-		panic(err)
+		a.FatalError(err)
 	}
+	// check if config has depends on other configs
 	r, _ := regexp.Compile(`depends:(.*)`)
 	matches := r.FindStringSubmatch(string(data))
 	if len(matches) > 1 && strings.TrimSpace(matches[1]) != "" {
+		// load parent config
 		a.New(strings.TrimSpace(matches[1]), config)
 	}
+	// unmarshal config file in config struct
 	err = yaml.Unmarshal([]byte(data), config)
 	if err != nil {
-		panic(err)
+		a.FatalError(err)
 	}
 	return &a
 }

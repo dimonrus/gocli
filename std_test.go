@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	Project struct {
-		Name string
+		Name  string
 		Debug bool
 	}
 	Web struct {
@@ -19,10 +19,21 @@ type Config struct {
 func TestName(t *testing.T) {
 	var arg Arguments
 	var config Config
-	environment := os.Getenv("ENV");
+	environment := os.Getenv("ENV")
 	if environment == "" {
 		panic("ENV is not defined")
 	}
 	app := DNApp{}.New(environment, &config)
-	app.Start(arg)
+	err := app.Start(arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !config.Project.Debug {
+		t.Fatal("debug mast be false")
+	}
+
+	if config.Web.Port != 8000 {
+		t.Fatal("incorrect port")
+	}
 }

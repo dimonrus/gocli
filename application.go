@@ -9,7 +9,11 @@ type Application interface {
 	// Set config struct
 	SetConfig(cfg interface{}) Application
 	// Start application
-	Start(arguments Arguments) ApplicationErrorInterface
+	Start(arguments Arguments) ErrorInterface
 	// Init app method
 	New(env string, cfg interface{}) Application
+	// Behaviour for fatal errors
+	FatalError(err error)
+	// Get Logger
+	GetLogger(level int) *logger
 }
