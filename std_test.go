@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"testing"
 )
@@ -21,29 +22,36 @@ func TestName(t *testing.T) {
 	var config Config
 	environment := os.Getenv("ENV")
 	if environment == "" {
-		t.Fatal("ENV is not defined")
+		panic("ENV is not defined")
 	}
 
 	app := DNApp{}.New(environment, &config)
 	app.ParseFlags(&config.Arguments)
 
-	if appType, ok := config.Arguments["app"]; ok == true {
-		switch appType.Value {
-		case ApplicationTypeWeb:
-			err := app.Start(config.Arguments)
-			if err != nil {
-				t.Fatal(err)
-			}
-		default:
-			t.Fatal("wrong type")
-		}
+	appType, ok := config.Arguments["app"]
+	if ok != true {
+		app.FatalError(errors.New("app type is not presents"))
+	}
+
+	value := appType.Value.(*string)
+	var err error
+
+	switch *value {
+	case ApplicationTypeWeb:
+		err = app.Start(config.Arguments)
+	default:
+		err = errors.New("app type is undefined")
+	}
+
+	if err != nil {
+		app.FatalError(err)
 	}
 
 	if !config.Project.Debug {
-		t.Fatal("debug mast be false")
+		app.FatalError(errors.New("debug mast be false"))
 	}
 
 	if config.Web.Port != 8000 {
-		t.Fatal("incorrect port")
+		app.FatalError(errors.New("incorrect port"))
 	}
 }
