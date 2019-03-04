@@ -6,6 +6,12 @@ import (
 	"testing"
 )
 
+const (
+	ApplicationTypeWeb      = "web"
+	ApplicationTypeScript   = "script"
+	ApplicationTypeConsumer = "consumer"
+)
+
 type Config struct {
 	Project struct {
 		Name  string

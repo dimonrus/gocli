@@ -39,7 +39,7 @@ func (a DNApp) SetConfig(cfg interface{}) Application {
 }
 
 // Start application
-func (a DNApp) Start(arguments Arguments) ErrorInterface {
+func (a DNApp) Start(arguments Arguments) IError {
 	return nil
 }
 

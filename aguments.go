@@ -3,10 +3,6 @@ package main
 const (
 	ArgumentTypeString = "string"
 	ArgumentTypeInt    = "int"
-
-	ApplicationTypeWeb      = "web"
-	ApplicationTypeScript   = "script"
-	ApplicationTypeConsumer = "consumer"
 )
 
 // Console app arguments

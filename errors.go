@@ -34,7 +34,7 @@ func (ae ApplicationError) GetDetails() []ApplicationErrorDetail {
 }
 
 // Interface app error add detail
-func (ae ApplicationError) AddDetail(message string, code int) ErrorInterface {
+func (ae ApplicationError) AddDetail(message string, code int) IError {
 	ae.details = append(ae.details, ApplicationErrorDetail{Message: message, Code: code})
 	return &ae
 }
@@ -46,16 +46,16 @@ type ApplicationErrorDetail struct {
 }
 
 // Common Error Interface
-type ErrorInterface interface {
+type IError interface {
 	Error() string
 	GetCode() int
 	GetStack() []byte
 	GetDetails() []ApplicationErrorDetail
-	AddDetail(message string, code int) ErrorInterface
+	AddDetail(message string, code int) IError
 }
 
 // New error
-func NewError(message string, code int) ErrorInterface {
+func NewError(message string, code int) IError {
 	err := ApplicationError{
 		message: message,
 		code:    code,
@@ -66,7 +66,7 @@ func NewError(message string, code int) ErrorInterface {
 }
 
 // New error
-func NewErrorF(message string, code int, args ...interface{}) ErrorInterface {
+func NewErrorF(message string, code int, args ...interface{}) IError {
 	err := ApplicationError{
 		message: fmt.Sprintf(message, args),
 		code:    code,
