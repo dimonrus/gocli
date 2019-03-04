@@ -1,4 +1,4 @@
-package main
+package gocli
 
 const (
 	ArgumentTypeString = "string"

@@ -1,4 +1,4 @@
-package main
+package gocli
 
 // Application class
 type Application interface {
