@@ -74,6 +74,8 @@ func (a DNApp) New(env string, config interface{}) Application {
 	if err != nil {
 		a.FatalError(err)
 	}
+	a.config = config
+
 	return &a
 }
 
