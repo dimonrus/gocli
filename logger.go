@@ -12,8 +12,26 @@ const (
 	LogLevelErr
 )
 
+type Logger interface {
+	Print(v ...interface{})
+	Println(v ...interface{})
+	Printf(format string, v ...interface{})
+
+	Info(v ...interface{})
+	Infoln(v ...interface{})
+	Infof(format string, v ...interface{})
+
+	Warn(v ...interface{})
+	Warnln(v ...interface{})
+	Warnf(format string, v ...interface{})
+
+	Error(v ...interface{})
+	Errorln(v ...interface{})
+	Errorf(format string, v ...interface{})
+}
+
 // New logger
-func NewLogger(level int, prefix string, flags int) *logger {
+func NewLogger(level int, prefix string, flags int) Logger {
 	return &logger{level: level, stdLogger: log.New(os.Stdout, prefix, flags)}
 }
 
