@@ -15,7 +15,7 @@ type Application interface {
 	// Behaviour for fatal errors
 	FatalError(err error)
 	// Get Logger
-	GetLogger(level int) *logger
+	GetLogger(level int) Logger
 	// Parse console flags
 	ParseFlags(args *Arguments)
 }
