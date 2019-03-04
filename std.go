@@ -15,7 +15,7 @@ import (
 // Dynamic Name Application
 type DNApp struct {
 	config interface{}
-	logger *logger
+	logger Logger
 }
 
 // Get config struct
@@ -49,8 +49,8 @@ func (a DNApp) FatalError(err error) {
 }
 
 // Get logger
-func (a DNApp) GetLogger(level int) *logger {
-	if a.logger == nil || a.logger.level != level {
+func (a DNApp) GetLogger(level int) Logger {
+	if a.logger == nil || a.logger.GetLevel() != level {
 		a.logger = NewLogger(level, "Application: ", log.Ldate|log.Ltime|log.Lshortfile)
 	}
 	return a.logger

@@ -13,6 +13,8 @@ const (
 )
 
 type Logger interface {
+	GetLevel() int
+
 	Print(v ...interface{})
 	Println(v ...interface{})
 	Printf(format string, v ...interface{})
@@ -39,6 +41,11 @@ func NewLogger(level int, prefix string, flags int) Logger {
 type logger struct {
 	level     int
 	stdLogger *log.Logger
+}
+
+// Print
+func (l logger) GetLevel() int {
+	return l.level
 }
 
 // Print
