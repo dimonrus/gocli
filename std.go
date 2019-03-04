@@ -7,15 +7,15 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
 
 // Dynamic Name Application
 type DNApp struct {
-	config interface{}
-	logger Logger
+	config     interface{}
+	logger     Logger
+	ConfigPath string
 }
 
 // Get config struct
@@ -25,11 +25,7 @@ func (a DNApp) GetConfig() interface{} {
 
 // Get full path to config
 func (a DNApp) GetConfigPath(env string) string {
-	rootPath, err := filepath.Abs("")
-	if err != nil {
-		panic(err)
-	}
-	return fmt.Sprintf("%s%s", rootPath, "/config/yaml/"+env+".yaml")
+	return fmt.Sprintf("%s/%s.yaml", a.ConfigPath, env)
 }
 
 // Set config struct

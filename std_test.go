@@ -3,6 +3,7 @@ package gocli
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -31,7 +32,12 @@ func TestName(t *testing.T) {
 		panic("ENV is not defined")
 	}
 
-	app := DNApp{}.New(environment, &config)
+	rootPath, err := filepath.Abs("")
+	if err != nil {
+		panic(err)
+	}
+
+	app := DNApp{ConfigPath: rootPath + "/config/yaml"}.New(environment, &config)
 	app.ParseFlags(&config.Arguments)
 
 	appType, ok := config.Arguments["app"]
@@ -40,7 +46,6 @@ func TestName(t *testing.T) {
 	}
 
 	value := appType.Value.(*string)
-	var err error
 
 	switch *value {
 	case ApplicationTypeWeb:
