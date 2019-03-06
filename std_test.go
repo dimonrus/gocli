@@ -45,9 +45,9 @@ func TestName(t *testing.T) {
 		app.FatalError(errors.New("app type is not presents"))
 	}
 
-	value := appType.Value.(*string)
+	value := appType.Value.(string)
 
-	switch *value {
+	switch value {
 	case ApplicationTypeWeb:
 		err = app.Start(config.Arguments)
 	default:
