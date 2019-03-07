@@ -81,12 +81,12 @@ func (a DNApp) ParseFlags(args *Arguments) {
 		switch argument.Type {
 		case ArgumentTypeString:
 			var value string
-			argument.Value = value
+			argument.Value = &value
 			(*args)[key] = argument
 			flag.StringVar(&value, key, "", argument.Label)
 		case ArgumentTypeInt:
 			var value int64
-			argument.Value = value
+			argument.Value = &value
 			(*args)[key] = argument
 			flag.Int64Var(&value, key, 0, argument.Label)
 		default:
@@ -94,5 +94,4 @@ func (a DNApp) ParseFlags(args *Arguments) {
 		}
 	}
 	flag.Parse()
-
 }
