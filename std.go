@@ -9,6 +9,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"testing"
 )
 
 // Dynamic Name Application
@@ -93,5 +94,6 @@ func (a DNApp) ParseFlags(args *Arguments) {
 			a.FatalError(errors.New("not implemented argument type"))
 		}
 	}
+	testing.Init()
 	flag.Parse()
 }
