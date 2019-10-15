@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dimonrus/porterr"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -36,7 +37,7 @@ func (a DNApp) SetConfig(cfg interface{}) Application {
 }
 
 // Start application
-func (a DNApp) Start(arguments Arguments) IError {
+func (a DNApp) Start(arguments Arguments) porterr.IError {
 	return nil
 }
 
