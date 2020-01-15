@@ -18,3 +18,6 @@ arguments:
   count:
     type: int
     label: count
+  success:
+    type: bool
+    lable: success

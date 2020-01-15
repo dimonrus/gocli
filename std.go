@@ -68,7 +68,7 @@ func (a DNApp) New(env string, config interface{}) Application {
 		a.New(strings.TrimSpace(matches[1]), config)
 	}
 	// unmarshal config file in config struct
-	err = yaml.Unmarshal([]byte(data), config)
+	err = yaml.Unmarshal(data, config)
 	if err != nil {
 		a.FatalError(err)
 	}
@@ -91,8 +91,18 @@ func (a DNApp) ParseFlags(args *Arguments) {
 			argument.Value = &value
 			(*args)[key] = argument
 			flag.Int64Var(&value, key, 0, argument.Label)
+		case ArgumentTypeUint:
+			var value uint64
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.Uint64Var(&value, key, 0, argument.Label)
+		case ArgumentTypeBool:
+			var value bool
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.BoolVar(&value, key, false, argument.Label)
 		default:
-			a.FatalError(errors.New("not implemented argument type"))
+			a.FatalError(errors.New("argument type: "+argument.Type+" is not supported. Argument: "+argument.Label))
 		}
 	}
 	testing.Init()
