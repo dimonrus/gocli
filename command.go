@@ -66,6 +66,17 @@ func (c Command) GetOrigin() string {
 	return string(c.origin)
 }
 
+// Render command
+func (c Command) String() string {
+	c.m.RLock()
+	defer c.m.RUnlock()
+	var command []string
+	for _, a := range c.arguments {
+		command = append(command, a.Name)
+	}
+	return strings.Join(command, " ")
+}
+
 // Parse command
 func ParseCommand(command []byte) Command {
 	sCommand := strings.Trim(string(command), "	 \n")
@@ -81,7 +92,7 @@ func ParseCommand(command []byte) Command {
 				words = append(words, strings.Split(word, CommandAssignee)...)
 				word = ""
 			}
-		} else if c != '\n' {
+		} else if c != '\n' && c != '\t' {
 			word += string(c)
 		}
 	}

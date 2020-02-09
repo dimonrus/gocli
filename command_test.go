@@ -1,6 +1,7 @@
 package gocli
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -20,4 +21,9 @@ func TestParseCommand(t *testing.T) {
 	if command.Arguments()[2].Type != ArgumentTypeInt {
 		t.Fatal("must be int")
 	}
+	command = ParseCommand([]byte("web     repeat=2\n always 	 true\t false"))
+	if len(command.Arguments()) != 6 {
+		t.Fatal("wrong command parsing")
+	}
+	fmt.Println(command.String())
 }
