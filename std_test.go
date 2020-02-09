@@ -2,6 +2,7 @@ package gocli
 
 import (
 	"errors"
+	"github.com/dimonrus/gohelp"
 	"os"
 	"path/filepath"
 	"testing"
@@ -46,12 +47,29 @@ func TestName(t *testing.T) {
 	}
 
 	value := appType.GetString()
+	cos := make(chan bool)
 
 	value = ApplicationTypeWeb
 
+	go func() {
+		err = app.Start("3333", func(command Command) {
+			v := command.Arguments()[0]
+			app.GetLogger(LogLevelInfo).Infof("Receive command: %s", command.GetOrigin())
+			if v.Name == "exit" {
+				cos <- true
+			} else {
+				app.GetLogger(LogLevelWarn).Warnf(gohelp.AnsiRed+"Unknown command: %s"+gohelp.AnsiReset, command.GetOrigin())
+				e := command.Result([]byte("Unknown command\n"))
+				if e != nil {
+					app.GetLogger(LogLevelInfo).Errorln(e)
+				}
+			}
+		})
+	}()
+
 	switch value {
 	case ApplicationTypeWeb:
-		err = app.Start(config.Arguments)
+		//start web
 	default:
 		err = errors.New("app type is undefined")
 	}
@@ -67,4 +85,7 @@ func TestName(t *testing.T) {
 	if config.Web.Port != 8000 {
 		app.FatalError(errors.New("incorrect port"))
 	}
+
+	<-cos
+	app.GetLogger(LogLevelInfo).Warnln("Exit...")
 }

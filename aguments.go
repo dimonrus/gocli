@@ -15,6 +15,7 @@ type Argument struct {
 	Type  string
 	Value interface{}
 	Label string
+	Name  string
 }
 
 // Get string value of argument
