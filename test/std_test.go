@@ -1,7 +1,9 @@
-package gocli
+package test
 
 import (
 	"errors"
+	"fmt"
+	"github.com/dimonrus/gocli"
 	"github.com/dimonrus/gohelp"
 	"os"
 	"path/filepath"
@@ -13,18 +15,6 @@ const (
 	ApplicationTypeScript   = "script"
 	ApplicationTypeConsumer = "consumer"
 )
-
-type Config struct {
-	Project struct {
-		Name  string
-		Debug bool
-	}
-	Web struct {
-		Port int
-		Host string
-	}
-	Arguments Arguments
-}
 
 func TestName(t *testing.T) {
 	var config Config
@@ -38,7 +28,7 @@ func TestName(t *testing.T) {
 		panic(err)
 	}
 
-	app := DNApp{ConfigPath: rootPath + "/config/yaml"}.New(environment, &config)
+	app := gocli.NewApplication(environment, rootPath + "/config/yaml", &config)
 	app.ParseFlags(&config.Arguments)
 
 	appType, ok := config.Arguments["app"]
@@ -46,26 +36,13 @@ func TestName(t *testing.T) {
 		app.FatalError(errors.New("app type is not presents"))
 	}
 
+	p, _ := app.GetAbsolutePath("cool", "test")
+	fmt.Println(p)
+
 	value := appType.GetString()
 	cos := make(chan bool)
 
 	value = ApplicationTypeWeb
-
-	go func() {
-		err = app.Start("3333", func(command Command) {
-			v := command.Arguments()[0]
-			app.GetLogger(LogLevelInfo).Infof("Receive command: %s", command.GetOrigin())
-			if v.Name == "exit" {
-				cos <- true
-			} else {
-				app.GetLogger(LogLevelWarn).Warnf(gohelp.AnsiRed+"Unknown command: %s"+gohelp.AnsiReset, command.GetOrigin())
-				e := command.Result([]byte("Unknown command\n"))
-				if e != nil {
-					app.GetLogger(LogLevelInfo).Errorln(e)
-				}
-			}
-		})
-	}()
 
 	switch value {
 	case ApplicationTypeWeb:
@@ -86,6 +63,22 @@ func TestName(t *testing.T) {
 		app.FatalError(errors.New("incorrect port"))
 	}
 
+	go func() {
+		err = app.Start("3333", func(command gocli.Command) {
+			v := command.Arguments()[0]
+			app.GetLogger(gocli.LogLevelInfo).Infof("Receive command: %s", command.GetOrigin())
+			if v.Name == "exit" {
+				cos <- true
+			} else {
+				app.GetLogger(gocli.LogLevelWarn).Warnf(gohelp.AnsiRed+"Unknown command: %s"+gohelp.AnsiReset, command.GetOrigin())
+				e := command.Result([]byte("Unknown command\n"))
+				if e != nil {
+					app.GetLogger(gocli.LogLevelInfo).Errorln(e)
+				}
+			}
+		})
+	}()
+
 	<-cos
-	app.GetLogger(LogLevelInfo).Warnln("Exit...")
+	app.GetLogger(gocli.LogLevelInfo).Warnln("Exit...")
 }

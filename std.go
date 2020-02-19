@@ -5,12 +5,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dimonrus/gohelp"
 	"github.com/dimonrus/porterr"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -22,30 +25,136 @@ const (
 )
 
 // Dynamic Name Application
+// Implements Application interface
 type DNApp struct {
-	config     interface{}
-	logger     Logger
-	ConfigPath string
+	// Config
+	config config
+	// Logger
+	logger Logger
+}
+
+// Application configuration
+type config struct {
+	// Values of parsed configs
+	values interface{}
+	// Path of config
+	path   string
+}
+
+// Create new Application
+func NewApplication(env string, configPath string, values interface{}) Application {
+	app := &DNApp{
+		config: config{
+			values: values,
+			path:   configPath,
+		},
+	}
+	return app.ParseConfig(env)
 }
 
 // Get config struct
 func (a DNApp) GetConfig() interface{} {
-	return a.config
+	return a.config.values
+}
+
+// Set config struct
+func (a *DNApp) SetConfig(cfg interface{}) Application {
+	a.config.values = cfg
+	return a
 }
 
 // Get full path to config
 func (a DNApp) GetConfigPath(env string) string {
-	return fmt.Sprintf("%s/%s.yaml", a.ConfigPath, env)
+	return fmt.Sprintf("%s/%s.yaml", a.config.path, env)
 }
 
-// Set config struct
-func (a DNApp) SetConfig(cfg interface{}) Application {
-	a.config = cfg
-	return &a
+// Get absolute path to application
+func (a DNApp) GetAbsolutePath(path string, dir string) (string, porterr.IError) {
+	rootPath, err := filepath.Abs("")
+	if err != nil {
+		return "", porterr.New(porterr.PortErrorArgument, "root path is incorrect")
+	}
+	if rootPath[len(rootPath)-1:] != string(os.PathSeparator) {
+		rootPath = rootPath + string(os.PathSeparator)
+	}
+	return gohelp.BeforeString(rootPath, dir) + dir + string(os.PathSeparator) + path, nil
+}
+
+// Fatal error
+func (a DNApp) FatalError(err error) {
+	panic(err)
+}
+
+// Get logger
+func (a *DNApp) GetLogger(level int) Logger {
+	if a.logger == nil || a.logger.GetLevel() != level {
+		a.logger = NewLogger(level, "Application: ", log.Ldate|log.Ltime|log.Lshortfile)
+	}
+	return a.logger
+}
+
+// Config parser
+func (a *DNApp) ParseConfig(env string) Application {
+	data, err := ioutil.ReadFile(a.GetConfigPath(env))
+	if err != nil {
+		a.FatalError(err)
+	}
+	// check if config has depends on other configs
+	r, _ := regexp.Compile(`depends:(.*)`)
+	matches := r.FindStringSubmatch(string(data))
+	if len(matches) > 1 && strings.TrimSpace(matches[1]) != "" {
+		// load parent config
+		a.ParseConfig(strings.TrimSpace(matches[1]))
+	}
+	// unmarshal config file in config struct
+	err = yaml.Unmarshal(data, a.config.values)
+	if err != nil {
+		a.FatalError(err)
+	}
+	return a
+}
+
+// Parse console arguments
+func (a DNApp) ParseFlags(args *Arguments) {
+	for key, argument := range *args {
+		argument.Name = key
+		switch argument.Type {
+		case ArgumentTypeString:
+			var value string
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.StringVar(&value, key, "", argument.Label)
+		case ArgumentTypeInt:
+			var value int64
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.Int64Var(&value, key, 0, argument.Label)
+		case ArgumentTypeUint:
+			var value uint64
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.Uint64Var(&value, key, 0, argument.Label)
+		case ArgumentTypeBool:
+			var value bool
+			argument.Value = &value
+			(*args)[key] = argument
+			flag.BoolVar(&value, key, false, argument.Label)
+		default:
+			a.FatalError(errors.New("argument type: " + argument.Type + " is not supported. Argument: " + argument.Label))
+		}
+	}
+	testing.Init()
+	flag.Parse()
 }
 
 // Start application
 func (a DNApp) Start(port string, callback func(command Command)) porterr.IError {
+	if port == "" {
+		return porterr.NewF(porterr.PortErrorArgument, "port is required")
+	}
+	if callback == nil {
+		return porterr.NewF(porterr.PortErrorArgument, "callback is required")
+	}
 	// Listen localhost socket connection
 	l, err := net.Listen(CommandSessionType, CommandSessionHost+":"+port)
 	if err != nil {
@@ -92,73 +201,4 @@ func (a DNApp) Start(port string, callback func(command Command)) porterr.IError
 		}(conn)
 	}
 	return e
-}
-
-// Fatal error
-func (a DNApp) FatalError(err error) {
-	panic(err)
-}
-
-// Get logger
-func (a DNApp) GetLogger(level int) Logger {
-	if a.logger == nil || a.logger.GetLevel() != level {
-		a.logger = NewLogger(level, "Application: ", log.Ldate|log.Ltime|log.Lshortfile)
-	}
-	return a.logger
-}
-
-// Init app
-func (a DNApp) New(env string, config interface{}) Application {
-	data, err := ioutil.ReadFile(a.GetConfigPath(env))
-	if err != nil {
-		a.FatalError(err)
-	}
-	// check if config has depends on other configs
-	r, _ := regexp.Compile(`depends:(.*)`)
-	matches := r.FindStringSubmatch(string(data))
-	if len(matches) > 1 && strings.TrimSpace(matches[1]) != "" {
-		// load parent config
-		a.New(strings.TrimSpace(matches[1]), config)
-	}
-	// unmarshal config file in config struct
-	err = yaml.Unmarshal(data, config)
-	if err != nil {
-		a.FatalError(err)
-	}
-	a.config = config
-
-	return &a
-}
-
-// Parse console arguments
-func (a DNApp) ParseFlags(args *Arguments) {
-	for key, argument := range *args {
-		argument.Name = key
-		switch argument.Type {
-		case ArgumentTypeString:
-			var value string
-			argument.Value = &value
-			(*args)[key] = argument
-			flag.StringVar(&value, key, "", argument.Label)
-		case ArgumentTypeInt:
-			var value int64
-			argument.Value = &value
-			(*args)[key] = argument
-			flag.Int64Var(&value, key, 0, argument.Label)
-		case ArgumentTypeUint:
-			var value uint64
-			argument.Value = &value
-			(*args)[key] = argument
-			flag.Uint64Var(&value, key, 0, argument.Label)
-		case ArgumentTypeBool:
-			var value bool
-			argument.Value = &value
-			(*args)[key] = argument
-			flag.BoolVar(&value, key, false, argument.Label)
-		default:
-			a.FatalError(errors.New("argument type: " + argument.Type + " is not supported. Argument: " + argument.Label))
-		}
-	}
-	testing.Init()
-	flag.Parse()
 }

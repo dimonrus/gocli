@@ -8,12 +8,14 @@ type Application interface {
 	GetConfig() interface{}
 	// Get full path to config
 	GetConfigPath(env string) string
+	// Get absolute path
+	GetAbsolutePath(path string, dir string) (string, porterr.IError)
 	// Set config struct
 	SetConfig(cfg interface{}) Application
+	// Parse config
+	ParseConfig(env string) Application
 	// Start application
 	Start(port string, callback func(command Command)) porterr.IError
-	// Init app method
-	New(env string, cfg interface{}) Application
 	// Behaviour for fatal errors
 	FatalError(err error)
 	// Get Logger
