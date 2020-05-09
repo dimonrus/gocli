@@ -93,6 +93,45 @@ func (a *DNApp) GetLogger(level int) Logger {
 	return a.logger
 }
 
+// Success message
+func (a DNApp) SuccessMessage(message string, command ...*Command) {
+	message = gohelp.AnsiGreen + message + gohelp.AnsiReset
+	a.GetLogger(LogLevelInfo).Infoln(message)
+	for _, c := range command {
+		e := c.Result([]byte(message + "\n"))
+		if e != nil {
+			a.GetLogger(LogLevelWarn).Errorln(e)
+		}
+	}
+	return
+}
+
+// Attention message
+func (a DNApp) AttentionMessage(message string, command ...*Command) {
+	message = gohelp.AnsiCyan + message + gohelp.AnsiReset
+	a.GetLogger(LogLevelWarn).Warnln(message)
+	for _, c := range command {
+		e := c.Result([]byte(message + "\n"))
+		if e != nil {
+			a.GetLogger(LogLevelWarn).Errorln(e)
+		}
+	}
+	return
+}
+
+// Fail message
+func (a DNApp) FailMessage(message string, command ...*Command) {
+	message = gohelp.AnsiRed + message + gohelp.AnsiReset
+	a.GetLogger(LogLevelErr).Errorln(message)
+	for _, c := range command {
+		e := c.Result([]byte(message + "\n"))
+		if e != nil {
+			a.GetLogger(LogLevelWarn).Errorln(e)
+		}
+	}
+	return
+}
+
 // Config parser
 func (a *DNApp) ParseConfig(env string) Application {
 	data, err := ioutil.ReadFile(a.GetConfigPath(env))
@@ -148,7 +187,7 @@ func (a DNApp) ParseFlags(args *Arguments) {
 }
 
 // Start application
-func (a DNApp) Start(port string, callback func(command Command)) porterr.IError {
+func (a DNApp) Start(port string, callback func(command *Command)) porterr.IError {
 	if port == "" {
 		return porterr.NewF(porterr.PortErrorArgument, "port is required")
 	}

@@ -17,14 +17,18 @@ const (
 
 // Command is an argument list
 type Command struct {
+	// list of arguments
 	arguments  []Argument
+	// net connection
 	connection net.Conn
+	// original command
 	origin     []byte
+	// mutex for async access
 	m          sync.RWMutex
 }
 
 // Result of command to connection
-func (c Command) Result(result []byte) porterr.IError {
+func (c *Command) Result(result []byte) porterr.IError {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if c.connection == nil {
@@ -53,21 +57,21 @@ func (c *Command) UnbindConnection() {
 }
 
 // UnBind connection
-func (c Command) Arguments() []Argument {
+func (c *Command) Arguments() []Argument {
 	c.m.RLock()
 	defer c.m.RUnlock()
 	return c.arguments
 }
 
 // Get origin command
-func (c Command) GetOrigin() string {
+func (c *Command) GetOrigin() string {
 	c.m.RLock()
 	defer c.m.RUnlock()
 	return string(c.origin)
 }
 
 // Render command
-func (c Command) String() string {
+func (c *Command) String() string {
 	c.m.RLock()
 	defer c.m.RUnlock()
 	var command []string
@@ -78,7 +82,7 @@ func (c Command) String() string {
 }
 
 // Parse command
-func ParseCommand(command []byte) Command {
+func ParseCommand(command []byte) *Command {
 	sCommand := strings.Trim(string(command), "	 \n")
 	cmd := Command{
 		arguments: make([]Argument, 0),
@@ -121,5 +125,5 @@ func ParseCommand(command []byte) Command {
 
 		cmd.arguments = append(cmd.arguments, argument)
 	}
-	return cmd
+	return &cmd
 }

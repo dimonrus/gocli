@@ -28,7 +28,7 @@ func TestName(t *testing.T) {
 		panic(err)
 	}
 
-	app := gocli.NewApplication(environment, rootPath + "/config/yaml", &config)
+	app := gocli.NewApplication(environment, rootPath+"/config/yaml", &config)
 	app.ParseFlags(&config.Arguments)
 
 	appType, ok := config.Arguments["app"]
@@ -64,21 +64,17 @@ func TestName(t *testing.T) {
 	}
 
 	go func() {
-		err = app.Start("3333", func(command gocli.Command) {
+		err = app.Start("3333", func(command *gocli.Command) {
 			v := command.Arguments()[0]
-			app.GetLogger(gocli.LogLevelInfo).Infof("Receive command: %s", command.GetOrigin())
+			app.SuccessMessage("Receive command: " + command.String())
 			if v.Name == "exit" {
+				app.AttentionMessage("Exit...", command)
 				cos <- true
 			} else {
-				app.GetLogger(gocli.LogLevelWarn).Warnf(gohelp.AnsiRed+"Unknown command: %s"+gohelp.AnsiReset, command.GetOrigin())
-				e := command.Result([]byte("Unknown command\n"))
-				if e != nil {
-					app.GetLogger(gocli.LogLevelInfo).Errorln(e)
-				}
+				app.AttentionMessage(gohelp.AnsiRed+"Unknown command: "+command.String()+gohelp.AnsiReset, command)
 			}
 		})
 	}()
-
 	<-cos
-	app.GetLogger(gocli.LogLevelInfo).Warnln("Exit...")
+	app.GetLogger(gocli.LogLevelInfo).Infoln("Server shutdown.")
 }
