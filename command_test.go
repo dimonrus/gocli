@@ -27,3 +27,13 @@ func TestParseCommand(t *testing.T) {
 	}
 	fmt.Println(command.String())
 }
+
+func BenchmarkParseCommand(b *testing.B) {
+	com := []byte("-app=script name=migration --class one")
+	var command *Command
+	for i := 0; i < b.N; i++ {
+		command = ParseCommand(com)
+	}
+	_ = command
+	b.ReportAllocs()
+}

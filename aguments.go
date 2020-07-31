@@ -1,21 +1,36 @@
 package gocli
 
 const (
-	ArgumentTypeString  = "string"
-	ArgumentTypeInt     = "int"
-	ArgumentTypeUint    = "uint"
-	ArgumentTypeBool    = "bool"
+	ArgumentTypeString = "string"
+	ArgumentTypeInt    = "int"
+	ArgumentTypeUint   = "uint"
+	ArgumentTypeBool   = "bool"
 )
 
 // Console app arguments
 type Arguments map[string]Argument
 
-// Argument
+// Get command from arguments
+func (a Arguments) Command() *Command {
+	cmd := &Command{}
+	for _, arg := range a {
+		if arg.Value != nil {
+			cmd.arguments = append(cmd.arguments, arg)
+		}
+	}
+	return cmd
+}
+
+// Argument struct
 type Argument struct {
-	Type  string
+	// Type of argument
+	Type string
+	// Value of argument
 	Value interface{}
+	// Label of argument
 	Label string
-	Name  string
+	// Name of argument
+	Name string
 }
 
 // Get string value of argument

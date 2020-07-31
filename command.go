@@ -15,16 +15,21 @@ const (
 	CommandAssignee = "="
 )
 
+var (
+	 ignored = []rune{' ', '\n', '\t', '\r', '-'}
+	 assigned = '='
+)
+
 // Command is an argument list
 type Command struct {
 	// list of arguments
-	arguments  []Argument
+	arguments []Argument
 	// net connection
 	connection net.Conn
 	// original command
-	origin     []byte
+	origin []byte
 	// mutex for async access
-	m          sync.RWMutex
+	m sync.RWMutex
 }
 
 // Result of command to connection
@@ -83,47 +88,55 @@ func (c *Command) String() string {
 
 // Parse command
 func ParseCommand(command []byte) *Command {
-	sCommand := strings.Trim(string(command), "	 \n")
-	cmd := Command{
-		arguments: make([]Argument, 0),
+	var isIgnored, isAssignee bool
+	var word []byte
+	var argument Argument
+	var valueInt64 int64
+	var valueBool bool
+	var valueUint64 uint64
+	var err error
+	var cmd = Command{
+		arguments: make([]Argument, 0, 16),
 		origin:    command,
 	}
-	var words []string
-	var word string
-	for _, c := range sCommand {
-		if c == ' ' {
-			if len(word) > 0 {
-				words = append(words, strings.Split(word, CommandAssignee)...)
-				word = ""
+	var l = len(command) - 1
+	for j, c := range command {
+		isIgnored, isAssignee = false, false
+		for i := 0; i < len(ignored); i++ {
+			if ignored[i] == rune(c) {
+				isIgnored = true
+				break
 			}
-		} else if c != '\n' && c != '\t' {
-			word += string(c)
+			if assigned == rune(c) {
+				isAssignee = true
+			}
 		}
-	}
-	if len(word) > 0 {
-		words = append(words, strings.Split(word, CommandAssignee)...)
-		word = ""
-	}
-	for i := range words {
-		words[i] = strings.Trim(words[i], CommandPrefix)
-		var argument Argument
-		argument.Name = words[i]
-
-		if v, err := strconv.ParseInt(words[i], 10, 64); err == nil {
+		if !isIgnored && !isAssignee {
+			word = append(word, c)
+			if j != l {
+				continue
+			}
+		} else {
+			if len(word) == 0 {
+				continue
+			}
+		}
+		argument.Name = string(word)
+		if valueInt64, err = strconv.ParseInt(argument.Name, 10, 64); err == nil {
 			argument.Type = ArgumentTypeInt
-			argument.Value = &v
-		} else if v, err := strconv.ParseBool(words[i]); err == nil {
+			argument.Value = &valueInt64
+		} else if valueBool, err = strconv.ParseBool(argument.Name); err == nil {
 			argument.Type = ArgumentTypeBool
-			argument.Value = &v
-		} else if v, err := strconv.ParseUint(words[i], 10, 64); err == nil {
+			argument.Value = &valueBool
+		} else if valueUint64, err = strconv.ParseUint(argument.Name, 10, 64); err == nil {
 			argument.Type = ArgumentTypeUint
-			argument.Value = &v
+			argument.Value = &valueUint64
 		} else {
 			argument.Type = ArgumentTypeString
-			argument.Value = &words[i]
+			argument.Value = &argument.Name
 		}
-
 		cmd.arguments = append(cmd.arguments, argument)
+		word = nil
 	}
 	return &cmd
 }
