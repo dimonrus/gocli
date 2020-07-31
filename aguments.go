@@ -10,17 +10,6 @@ const (
 // Console app arguments
 type Arguments map[string]Argument
 
-// Get command from arguments
-func (a Arguments) Command() *Command {
-	cmd := &Command{}
-	for _, arg := range a {
-		if arg.Value != nil {
-			cmd.arguments = append(cmd.arguments, arg)
-		}
-	}
-	return cmd
-}
-
 // Argument struct
 type Argument struct {
 	// Type of argument
