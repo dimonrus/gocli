@@ -21,6 +21,7 @@ import (
 
 const (
 	CommandSessionHost = "localhost"
+	CommandSessionPort = "8080"
 	CommandSessionType = "tcp"
 )
 
@@ -195,16 +196,15 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 		return porterr.NewF(porterr.PortErrorArgument, "callback is required")
 	}
 	// host and port
-	var host, port string
+	var host, port = CommandSessionHost, CommandSessionPort
 	addressParts := strings.Split(address, ":")
 	if len(addressParts) == 2 {
-		if len(addressParts[0]) == 0 {
-			host = CommandSessionHost
+		if len(addressParts[0]) > 0 {
+			host = addressParts[0]
 		}
-		port = addressParts[1]
-	}
-	if host == "" || port == "" {
-		return porterr.NewF(porterr.PortErrorRequest, "Incorrect address format: %s", address)
+		if len (addressParts[1]) > 0 {
+			port = addressParts[1]
+		}
 	}
 	l, err := net.Listen(CommandSessionType, host+":"+port)
 	if err != nil {
