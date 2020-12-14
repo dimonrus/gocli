@@ -38,7 +38,7 @@ type config struct {
 	// Values of parsed configs
 	values interface{}
 	// Path of config
-	path   string
+	path string
 }
 
 // Create new Application
@@ -187,15 +187,26 @@ func (a DNApp) ParseFlags(args *Arguments) {
 }
 
 // Start application
-func (a DNApp) Start(port string, callback func(command *Command)) porterr.IError {
-	if port == "" {
-		return porterr.NewF(porterr.PortErrorArgument, "port is required")
+func (a DNApp) Start(address string, callback func(command *Command)) porterr.IError {
+	if address == "" {
+		return porterr.NewF(porterr.PortErrorArgument, "address is required")
 	}
 	if callback == nil {
 		return porterr.NewF(porterr.PortErrorArgument, "callback is required")
 	}
-	// Listen localhost socket connection
-	l, err := net.Listen(CommandSessionType, CommandSessionHost+":"+port)
+	// host and port
+	var host, port string
+	addressParts := strings.Split(address, ":")
+	if len(addressParts) == 2 {
+		if len(addressParts[0]) == 0 {
+			host = CommandSessionHost
+		}
+		port = addressParts[1]
+	}
+	if host == "" || port == "" {
+		return porterr.NewF(porterr.PortErrorRequest, "Incorrect address format: %s", address)
+	}
+	l, err := net.Listen(CommandSessionType, host+":"+port)
 	if err != nil {
 		return porterr.NewF(porterr.PortErrorIO, "Listen socket error: %s", err.Error())
 	}
