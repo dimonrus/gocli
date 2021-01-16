@@ -100,7 +100,9 @@ func TestRunCommand(t *testing.T) {
 	if e != nil {
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		conn.Close()
+	}()
 	go func() {
 		r := bufio.NewReader(conn)
 		for {
@@ -112,11 +114,12 @@ func TestRunCommand(t *testing.T) {
 			if err != nil {
 				t.Log(err.Error())
 			}
+			_ = l
 			t.Log(string(l))
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond * 300)
 		}
 	}()
-	_, err := conn.Write([]byte("restart;\n"))
+	_, err := conn.Write([]byte("restart; puko;\n"))
 	t.Log("Команда restart отправлена")
 	if err != nil {
 		e = porterr.New(porterr.PortErrorRequest, err.Error())
@@ -134,6 +137,6 @@ func TestRunCommand(t *testing.T) {
 		e = porterr.New(porterr.PortErrorRequest, err.Error())
 		return
 	}
-	time.Sleep(time.Second * 50)
+	time.Sleep(time.Second * 15)
 	return
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/dimonrus/gohelp"
 	"github.com/dimonrus/porterr"
 	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -241,8 +242,12 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 			for {
 				com, _, err := r.ReadLine()
 				if err != nil {
-					a.GetLogger(LogLevelErr).Errorln(err)
-					return
+					if err == io.EOF {
+						a.GetLogger(LogLevelErr).Errorln(gohelp.AnsiYellow+"Client connection closed"+gohelp.AnsiReset)
+					} else {
+						a.GetLogger(LogLevelErr).Errorln(gohelp.AnsiRed+err.Error()+gohelp.AnsiReset)
+					}
+					break
 				}
 				commands := strings.Split(string(com), CommandDelimiter)
 				for _, comm := range commands {
