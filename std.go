@@ -1,14 +1,13 @@
 package gocli
 
 import (
-	"bytes"
+	"bufio"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/dimonrus/gohelp"
 	"github.com/dimonrus/porterr"
 	"gopkg.in/yaml.v2"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -202,7 +201,7 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 		if len(addressParts[0]) > 0 {
 			host = addressParts[0]
 		}
-		if len (addressParts[1]) > 0 {
+		if len(addressParts[1]) > 0 {
 			port = addressParts[1]
 		}
 	}
@@ -227,12 +226,6 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 		}
 		// Handle command
 		go func(c net.Conn) {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, c)
-			if err != nil {
-				a.GetLogger(LogLevelErr).Errorln(err)
-				return
-			}
 			defer func() {
 				if err := recover(); err != nil {
 					a.GetLogger(LogLevelErr).Errorln("Command processor error:", err)
@@ -244,10 +237,25 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 					return
 				}
 			}()
-			// Parse command and run
-			command := ParseCommand(buf.Bytes())
-			command.BindConnection(c)
-			callback(command)
+			r := bufio.NewReader(c)
+			for {
+				com, _, err := r.ReadLine()
+				if err != nil {
+					a.GetLogger(LogLevelErr).Errorln(err)
+					return
+				}
+				commands := strings.Split(string(com), CommandDelimiter)
+				for _, comm := range commands {
+					comm = strings.Trim(comm, " 	")
+					// Parse command and run
+					if comm == "" {
+						continue
+					}
+					command := ParseCommand([]byte(comm))
+					command.BindConnection(c)
+					callback(command)
+				}
+			}
 		}(conn)
 	}
 	return e

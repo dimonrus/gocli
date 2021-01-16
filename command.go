@@ -11,13 +11,14 @@ import (
 )
 
 const (
-	CommandPrefix   = "-"
-	CommandAssignee = "="
+	CommandPrefix    = "-"
+	CommandAssignee  = "="
+	CommandDelimiter = ";"
 )
 
 var (
-	 ignored = []rune{' ', '\n', '\t', '\r', '-'}
-	 assigned = '='
+	ignored  = []rune{' ', '\n', '\t', '\r', '-'}
+	assigned = '='
 )
 
 // Command is an argument list

@@ -1,13 +1,18 @@
 package test
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"github.com/dimonrus/gocli"
 	"github.com/dimonrus/gohelp"
+	"github.com/dimonrus/porterr"
+	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 const (
@@ -16,7 +21,7 @@ const (
 	ApplicationTypeConsumer = "consumer"
 )
 
-func TestName(t *testing.T) {
+func TestServerApp(t *testing.T) {
 	var config Config
 	environment := os.Getenv("ENV")
 	if environment == "" {
@@ -64,12 +69,14 @@ func TestName(t *testing.T) {
 	}
 
 	go func() {
-		err = app.Start("3333", func(command *gocli.Command) {
+		err = app.Start(":3333", func(command *gocli.Command) {
 			v := command.Arguments()[0]
-			app.SuccessMessage("Receive command: " + command.String())
+			app.SuccessMessage("Receive command: " + command.String(), command)
 			if v.Name == "exit" {
 				app.AttentionMessage("Exit...", command)
 				cos <- true
+			} else if v.Name == "show" {
+				app.AttentionMessage(gohelp.AnsiYellow+"The show is began"+gohelp.AnsiReset, command)
 			} else {
 				app.AttentionMessage(gohelp.AnsiRed+"Unknown command: "+command.String()+gohelp.AnsiReset, command)
 			}
@@ -77,4 +84,56 @@ func TestName(t *testing.T) {
 	}()
 	<-cos
 	app.GetLogger(gocli.LogLevelInfo).Infoln("Server shutdown.")
+}
+
+func Dial() (conn net.Conn, e porterr.IError) {
+	var err error
+	conn, err = net.Dial("tcp", "0.0.0.0:3333")
+	if err != nil {
+		e = porterr.New(porterr.PortErrorIO, err.Error())
+	}
+	return
+}
+
+func TestRunCommand(t *testing.T) {
+	conn, e := Dial()
+	if e != nil {
+		return
+	}
+	defer conn.Close()
+	go func() {
+		r := bufio.NewReader(conn)
+		for {
+			l, _, err := r.ReadLine()
+			if err == io.EOF {
+				t.Log("Конец чтения")
+				break
+			}
+			if err != nil {
+				t.Log(err.Error())
+			}
+			t.Log(string(l))
+			time.Sleep(time.Second)
+		}
+	}()
+	_, err := conn.Write([]byte("restart;\n"))
+	t.Log("Команда restart отправлена")
+	if err != nil {
+		e = porterr.New(porterr.PortErrorRequest, err.Error())
+		return
+	}
+	_, err = conn.Write([]byte("show;\n"))
+	t.Log("Команда show отправлена")
+	if err != nil {
+		e = porterr.New(porterr.PortErrorRequest, err.Error())
+		return
+	}
+	_, err = conn.Write([]byte("exito;\n"))
+	t.Log("Команда exit отправлена")
+	if err != nil {
+		e = porterr.New(porterr.PortErrorRequest, err.Error())
+		return
+	}
+	time.Sleep(time.Second * 50)
+	return
 }
