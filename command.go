@@ -91,13 +91,9 @@ func (c *Command) String() string {
 func ParseCommand(command []byte) *Command {
 	var isIgnored, isAssignee bool
 	var word []byte
-	var argument Argument
-	var valueInt64 int64
-	var valueBool bool
-	var valueUint64 uint64
-	var err error
+	var k int
 	var cmd = Command{
-		arguments: make([]Argument, 0, 16),
+		arguments: make([]Argument, 16),
 		origin:    command,
 	}
 	var l = len(command) - 1
@@ -122,22 +118,26 @@ func ParseCommand(command []byte) *Command {
 				continue
 			}
 		}
-		argument.Name = string(word)
-		if valueInt64, err = strconv.ParseInt(argument.Name, 10, 64); err == nil {
-			argument.Type = ArgumentTypeInt
-			argument.Value = &valueInt64
-		} else if valueBool, err = strconv.ParseBool(argument.Name); err == nil {
-			argument.Type = ArgumentTypeBool
-			argument.Value = &valueBool
-		} else if valueUint64, err = strconv.ParseUint(argument.Name, 10, 64); err == nil {
-			argument.Type = ArgumentTypeUint
-			argument.Value = &valueUint64
-		} else {
-			argument.Type = ArgumentTypeString
-			argument.Value = &argument.Name
+		if k >= len(cmd.arguments) {
+			cmd.arguments = append(cmd.arguments, make([]Argument, 16)...)
 		}
-		cmd.arguments = append(cmd.arguments, argument)
+		cmd.arguments[k].Name = string(word)
+		if valueInt64, err := strconv.ParseInt(cmd.arguments[k].Name, 10, 64); err == nil {
+			cmd.arguments[k].Type = ArgumentTypeInt
+			cmd.arguments[k].Value = &valueInt64
+		} else if valueBool, err := strconv.ParseBool(cmd.arguments[k].Name); err == nil {
+			cmd.arguments[k].Type = ArgumentTypeBool
+			cmd.arguments[k].Value = &valueBool
+		} else if valueUint64, err := strconv.ParseUint(cmd.arguments[k].Name, 10, 64); err == nil {
+			cmd.arguments[k].Type = ArgumentTypeUint
+			cmd.arguments[k].Value = &valueUint64
+		} else {
+			cmd.arguments[k].Type = ArgumentTypeString
+			cmd.arguments[k].Value = &cmd.arguments[k].Name
+		}
+		k++
 		word = nil
 	}
+	cmd.arguments = cmd.arguments[:k]
 	return &cmd
 }

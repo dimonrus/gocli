@@ -28,6 +28,20 @@ func TestParseCommand(t *testing.T) {
 	fmt.Println(command.String())
 }
 
+func TestParseCommand2(t *testing.T) {
+	command := ParseCommand([]byte("consumer set count 1 report"))
+	args := command.Arguments()
+	if len(args) != 5 {
+		t.Fatal("wrong command parsing")
+	}
+	if args[1].GetString() != "set" {
+		t.Fatal("wrong parser set")
+	}
+	if args[3].GetInt() != 1 {
+		t.Fatal("wrong parser count number")
+	}
+}
+
 func BenchmarkParseCommand(b *testing.B) {
 	com := []byte("-app=script name=migration --class one")
 	var command *Command
