@@ -35,13 +35,18 @@ type Command struct {
 
 // Result of command to connection
 func (c *Command) Result(result []byte) porterr.IError {
+	data := fmt.Sprintf(gohelp.AnsiBlue+"--->: "+gohelp.AnsiGreen+"%s"+gohelp.AnsiReset, result)
+	return c.Response([]byte(data))
+}
+
+// Flat Response of command to connection
+func (c *Command) Response(result []byte) porterr.IError {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if c.connection == nil {
 		return nil
 	}
-	data := fmt.Sprintf(gohelp.AnsiBlue+"--->: "+gohelp.AnsiGreen+"%s"+gohelp.AnsiReset, result)
-	_, err := c.connection.Write([]byte(data))
+	_, err := c.connection.Write(result)
 	if err != nil {
 		return porterr.New(porterr.PortErrorIO, "Result command write error: "+err.Error())
 	}
