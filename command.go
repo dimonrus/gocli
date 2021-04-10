@@ -39,7 +39,7 @@ func (c *Command) Result(result []byte) porterr.IError {
 	return c.Response([]byte(data))
 }
 
-// Flat Response of command to connection
+// Response Flat result of command to connection
 func (c *Command) Response(result []byte) porterr.IError {
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -53,28 +53,28 @@ func (c *Command) Response(result []byte) porterr.IError {
 	return nil
 }
 
-// Bind connection to command
+// BindConnection Bind connection to command
 func (c *Command) BindConnection(conn net.Conn) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	c.connection = conn
 }
 
-// UnBind connection
+// UnbindConnection UnBind connection
 func (c *Command) UnbindConnection() {
 	c.m.Lock()
 	defer c.m.Unlock()
 	c.connection = nil
 }
 
-// UnBind connection
+// Arguments command arguments
 func (c *Command) Arguments() []Argument {
 	c.m.RLock()
 	defer c.m.RUnlock()
 	return c.arguments
 }
 
-// Get origin command
+// GetOrigin Get origin command
 func (c *Command) GetOrigin() string {
 	c.m.RLock()
 	defer c.m.RUnlock()
@@ -92,7 +92,7 @@ func (c *Command) String() string {
 	return strings.Join(command, " ")
 }
 
-// Parse command
+// ParseCommand Parse command
 func ParseCommand(command []byte) *Command {
 	var isIgnored, isAssignee bool
 	var word []byte

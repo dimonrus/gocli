@@ -7,7 +7,7 @@ const (
 	ArgumentTypeBool   = "bool"
 )
 
-// Console app arguments
+// Arguments Console app arguments
 type Arguments map[string]Argument
 
 // Argument struct
@@ -22,25 +22,25 @@ type Argument struct {
 	Name string
 }
 
-// Get string value of argument
+// GetString Get string value of argument
 func (a Argument) GetString() string {
 	value := a.Value.(*string)
 	return *value
 }
 
-// Get int value of argument
+// GetInt Get int value of argument
 func (a Argument) GetInt() int64 {
 	value := a.Value.(*int64)
 	return *value
 }
 
-// Get int value of argument
+// GetUnit Get int value of argument
 func (a Argument) GetUnit() uint64 {
 	value := a.Value.(*uint64)
 	return *value
 }
 
-// Get bool value of argument
+// GetBool Get bool value of argument
 func (a Argument) GetBool() bool {
 	value := a.Value.(*bool)
 	return *value

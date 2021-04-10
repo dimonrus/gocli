@@ -83,7 +83,7 @@ func TestServerApp(t *testing.T) {
 		})
 	}()
 	<-cos
-	app.GetLogger(gocli.LogLevelInfo).Infoln("Server shutdown.")
+	app.GetLogger().Infoln("Server shutdown.")
 }
 
 func Dial() (conn net.Conn, e porterr.IError) {

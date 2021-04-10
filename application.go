@@ -2,30 +2,32 @@ package gocli
 
 import "github.com/dimonrus/porterr"
 
-// Application class
+// Application interface
 type Application interface {
-	// Get config struct
+	// GetConfig Get config struct
 	GetConfig() interface{}
-	// Get full path to config
+	// GetConfigPath Get full path to config
 	GetConfigPath(env string) string
-	// Get absolute path
+	// GetAbsolutePath Get absolute path
 	GetAbsolutePath(path string, dir string) (string, porterr.IError)
-	// Set config struct
+	// SetConfig Set config struct
 	SetConfig(cfg interface{}) Application
-	// Parse config
+	// ParseConfig Parse config
 	ParseConfig(env string) Application
-	// Start application
+	// Start run application
 	Start(port string, callback func(command *Command)) porterr.IError
-	// Behaviour for fatal errors
+	// FatalError Behaviour for fatal errors
 	FatalError(err error)
-	// Get Logger
-	GetLogger(level int) Logger
-	// Success log message with command repeat
+	// GetLogger Get Logger
+	GetLogger() Logger
+	// SetLogger set custom logger
+	SetLogger(logger Logger)
+	// SuccessMessage Success log message with command repeat
 	SuccessMessage(message string, command ...*Command)
-	// Warning log message with command repeat
+	// AttentionMessage Warning log message with command repeat
 	AttentionMessage(message string, command ...*Command)
-	// Fail log message with command repeat
+	// FailMessage Fail log message with command repeat
 	FailMessage(message string, command ...*Command)
-	// Parse console flags
+	// ParseFlags Parse console flags
 	ParseFlags(args *Arguments)
 }

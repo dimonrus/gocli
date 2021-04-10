@@ -10,7 +10,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -25,7 +24,7 @@ const (
 	CommandSessionType = "tcp"
 )
 
-// Dynamic Name Application
+// DNApp Dynamic Name Application
 // Implements Application interface
 type DNApp struct {
 	// Config
@@ -42,7 +41,7 @@ type config struct {
 	path string
 }
 
-// Create new Application
+// NewApplication Create new Application
 func NewApplication(env string, configPath string, values interface{}) Application {
 	app := &DNApp{
 		config: config{
@@ -53,23 +52,23 @@ func NewApplication(env string, configPath string, values interface{}) Applicati
 	return app.ParseConfig(env)
 }
 
-// Get config struct
+// GetConfig Get config struct
 func (a DNApp) GetConfig() interface{} {
 	return a.config.values
 }
 
-// Set config struct
+// SetConfig Set config struct
 func (a *DNApp) SetConfig(cfg interface{}) Application {
 	a.config.values = cfg
 	return a
 }
 
-// Get full path to config
+// GetConfigPath Get full path to config
 func (a DNApp) GetConfigPath(env string) string {
 	return fmt.Sprintf("%s/%s.yaml", a.config.path, env)
 }
 
-// Get absolute path to application
+// GetAbsolutePath Get absolute path to application
 func (a DNApp) GetAbsolutePath(path string, dir string) (string, porterr.IError) {
 	rootPath, err := filepath.Abs("")
 	if err != nil {
@@ -81,59 +80,65 @@ func (a DNApp) GetAbsolutePath(path string, dir string) (string, porterr.IError)
 	return gohelp.BeforeString(rootPath, dir) + dir + string(os.PathSeparator) + path, nil
 }
 
-// Fatal error
+// FatalError Fatal error
 func (a DNApp) FatalError(err error) {
 	panic(err)
 }
 
-// Get logger
-func (a *DNApp) GetLogger(level int) Logger {
-	if a.logger == nil || a.logger.GetLevel() != level {
-		a.logger = NewLogger(level, "Application: ", log.Ldate|log.Ltime|log.Lshortfile)
+// GetLogger Get logger
+func (a *DNApp) GetLogger() Logger {
+	if a.logger == nil {
+		a.logger = NewLogger(LoggerConfig{})
 	}
 	return a.logger
 }
 
-// Success message
+// SetLogger Set logger
+func (a *DNApp) SetLogger(logger Logger) {
+	a.logger = logger
+	return
+}
+
+// SuccessMessage printing success message
 func (a DNApp) SuccessMessage(message string, command ...*Command) {
 	message = gohelp.AnsiGreen + message + gohelp.AnsiReset
-	a.GetLogger(LogLevelInfo).Infoln(message)
+	a.GetLogger().Infoln(message)
 	for _, c := range command {
 		e := c.Result([]byte(message + "\n"))
 		if e != nil {
-			a.GetLogger(LogLevelWarn).Errorln(e)
+			a.GetLogger().Errorln(e)
 		}
 	}
 	return
 }
 
-// Attention message
+// AttentionMessage printing attention message
 func (a DNApp) AttentionMessage(message string, command ...*Command) {
 	message = gohelp.AnsiCyan + message + gohelp.AnsiReset
-	a.GetLogger(LogLevelWarn).Warnln(message)
+	a.GetLogger().Warnln(message)
 	for _, c := range command {
 		e := c.Result([]byte(message + "\n"))
 		if e != nil {
-			a.GetLogger(LogLevelWarn).Errorln(e)
+			a.GetLogger().Errorln(e)
 		}
 	}
 	return
 }
 
-// Fail message
+// FailMessage printing fail message
 func (a DNApp) FailMessage(message string, command ...*Command) {
 	message = gohelp.AnsiRed + message + gohelp.AnsiReset
-	a.GetLogger(LogLevelErr).Errorln(message)
+	a.GetLogger().Errorln(message)
 	for _, c := range command {
 		e := c.Result([]byte(message + "\n"))
 		if e != nil {
-			a.GetLogger(LogLevelWarn).Errorln(e)
+			a.GetLogger().Errorln(e)
 		}
 	}
 	return
 }
 
-// Config parser
+// ParseConfig parse config depends on env
 func (a *DNApp) ParseConfig(env string) Application {
 	data, err := ioutil.ReadFile(a.GetConfigPath(env))
 	if err != nil {
@@ -154,7 +159,7 @@ func (a *DNApp) ParseConfig(env string) Application {
 	return a
 }
 
-// Parse console arguments
+// ParseFlags parse console arguments
 func (a DNApp) ParseFlags(args *Arguments) {
 	for key, argument := range *args {
 		argument.Name = key
@@ -187,7 +192,7 @@ func (a DNApp) ParseFlags(args *Arguments) {
 	flag.Parse()
 }
 
-// Start application
+// Start run application
 func (a DNApp) Start(address string, callback func(command *Command)) porterr.IError {
 	if address == "" {
 		return porterr.NewF(porterr.PortErrorArgument, "address is required")
@@ -213,10 +218,10 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 	defer func() {
 		err := l.Close()
 		if err != nil {
-			a.GetLogger(LogLevelErr).Errorln(err)
+			a.GetLogger().Errorln(err)
 		}
 	}()
-	a.GetLogger(LogLevelInfo).Infof("Start listening %s commands on %s:%s", CommandSessionType, CommandSessionHost, port)
+	a.GetLogger().Infof("Start listening %s commands on %s:%s", CommandSessionType, CommandSessionHost, port)
 	var e porterr.IError
 	for {
 		// Listen for an incoming connection.
@@ -229,12 +234,12 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 		go func(c net.Conn) {
 			defer func() {
 				if err := recover(); err != nil {
-					a.GetLogger(LogLevelErr).Errorln("Command processor error:", err)
+					a.GetLogger().Errorln("Command processor error:", err)
 				}
 				// Always close the connection after process command
 				err = c.Close()
 				if err != nil {
-					a.GetLogger(LogLevelErr).Errorln(err)
+					a.GetLogger().Errorln(err)
 					return
 				}
 			}()
@@ -243,9 +248,9 @@ func (a DNApp) Start(address string, callback func(command *Command)) porterr.IE
 				com, _, err := r.ReadLine()
 				if err != nil {
 					if err == io.EOF {
-						a.GetLogger(LogLevelErr).Errorln(gohelp.AnsiYellow+"Client connection closed"+gohelp.AnsiReset)
+						a.GetLogger().Errorln(gohelp.AnsiYellow + "Client connection closed" + gohelp.AnsiReset)
 					} else {
-						a.GetLogger(LogLevelErr).Errorln(gohelp.AnsiRed+err.Error()+gohelp.AnsiReset)
+						a.GetLogger().Errorln(gohelp.AnsiRed + err.Error() + gohelp.AnsiReset)
 					}
 					break
 				}

@@ -1,6 +1,8 @@
 package gocli
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 )
@@ -10,10 +12,15 @@ const (
 	LogLevelInfo
 	LogLevelWarn
 	LogLevelErr
+
+	DefaultCallDepth = 2
+
+	DefaultKeyLoggerPrefix = "prefix"
 )
 
+// Logger Common logger interface
 type Logger interface {
-	GetLevel() int
+	GetConfig() LoggerConfig
 
 	Print(v ...interface{})
 	Println(v ...interface{})
@@ -32,96 +39,205 @@ type Logger interface {
 	Errorf(format string, v ...interface{})
 }
 
-// New logger
-func NewLogger(level int, prefix string, flags int) Logger {
-	return &logger{level: level, stdLogger: log.New(os.Stdout, prefix, flags)}
+// LoggerFormat logger prefix
+type LoggerFormat map[string]string
+
+// FromContext create log prefix from context
+func (lf LoggerFormat) FromContext(ctx context.Context) string {
+	var prefix string
+	for key, value := range lf {
+		if v, ok := ctx.Value(key).(string); ok {
+			prefix += fmt.Sprintf(value, v) + " "
+		}
+	}
+	return prefix
+}
+
+// String serialize format to string
+func (lf LoggerFormat) String() string {
+	if v, ok := lf[DefaultKeyLoggerPrefix]; ok {
+		return v + " "
+	}
+	return ""
+}
+
+// LoggerConfig configuration of logger
+type LoggerConfig struct {
+	// Level of log message
+	Level int
+	// Default is 2
+	Depth int
+	// Flags
+	Flags int
+	// Format for multiple arguments
+	Format LoggerFormat
+}
+
+// NewLogger Init logger struct
+func NewLogger(config LoggerConfig) Logger {
+	config.Depth = config.Depth | DefaultCallDepth
+	config.Level = config.Level | LogLevelDebug
+	config.Flags = config.Flags | log.Ldate | log.Ltime | log.Lshortfile
+	return &logger{config: config, stdLogger: log.New(os.Stdout, config.Format.String(), config.Flags)}
 }
 
 // logger struct
 type logger struct {
-	level     int
+	config    LoggerConfig
 	stdLogger *log.Logger
 }
 
-// Print
-func (l logger) GetLevel() int {
-	return l.level
+// GetConfig return logger config
+func (l logger) GetConfig() LoggerConfig {
+	return l.config
 }
 
-// Print
+// Print printing message
 func (l logger) Print(v ...interface{}) {
-	l.stdLogger.Print(v...)
+	if len(v) > 0 {
+		if c, ok := v[0].(context.Context); ok {
+			l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+		} else {
+			l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+		}
+	}
 }
 
-// Info
+// Info printing message at info level
 func (l logger) Info(v ...interface{}) {
-	if (l.level & (LogLevelInfo | LogLevelDebug)) != 0 {
-		l.stdLogger.Print(v...)
+	if (l.config.Level & (LogLevelInfo | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+			}
+		}
 	}
 }
 
-// Warning
+// Warn printing message at warn level
 func (l logger) Warn(v ...interface{}) {
-	if (l.level & (LogLevelWarn | LogLevelDebug)) != 0 {
-		l.stdLogger.Print(v...)
+	if (l.config.Level & (LogLevelWarn | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+			}
+		}
 	}
 }
 
-// Error logging
+// Error printing message at error level
 func (l logger) Error(v ...interface{}) {
-	if (l.level & (LogLevelErr | LogLevelDebug)) != 0 {
-		l.stdLogger.Print(v...)
+	if (l.config.Level & (LogLevelErr | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+			}
+		}
 	}
 }
 
-// Print ln
+// Println printing message with new line symbol
 func (l logger) Println(v ...interface{}) {
-	l.stdLogger.Println(v...)
+	if len(v) > 0 {
+		if c, ok := v[0].(context.Context); ok {
+			l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+		} else {
+			l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+		}
+	}
 }
 
-// Info ln
+// Infoln printing message with new line symbol at info level
 func (l logger) Infoln(v ...interface{}) {
-	if (l.level & (LogLevelInfo | LogLevelDebug)) != 0 {
-		l.stdLogger.Println(v...)
+	if (l.config.Level & (LogLevelInfo | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+			}
+		}
 	}
 }
 
-// Warning ln
+// Warnln printing message with new line symbol at warn level
 func (l logger) Warnln(v ...interface{}) {
-	if (l.level & (LogLevelWarn | LogLevelDebug)) != 0 {
-		l.stdLogger.Println(v...)
+	if (l.config.Level & (LogLevelWarn | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+			}
+		}
 	}
 }
 
-// Error ln
+// Errorln printing message with new line symbol at error level
 func (l logger) Errorln(v ...interface{}) {
-	if (l.level & (LogLevelErr | LogLevelDebug)) != 0 {
-		l.stdLogger.Println(v...)
+	if (l.config.Level & (LogLevelErr | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+			}
+		}
 	}
 }
 
-// Print format
+// Printf printing message in custom format
 func (l logger) Printf(format string, v ...interface{}) {
-	l.stdLogger.Printf(format, v...)
+	if len(v) > 0 {
+		if c, ok := v[0].(context.Context); ok {
+			l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+		} else {
+			l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+		}
+	}
 }
 
-// Info format
+// Infof printing message in custom format at info level
 func (l logger) Infof(format string, v ...interface{}) {
-	if (l.level & (LogLevelInfo | LogLevelDebug)) != 0 {
-		l.stdLogger.Printf(format, v...)
+	if (l.config.Level & (LogLevelInfo | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+			}
+		}
 	}
 }
 
-// Warning format
+// Warnf printing message in custom format at warn level
 func (l logger) Warnf(format string, v ...interface{}) {
-	if (l.level & (LogLevelWarn | LogLevelDebug)) != 0 {
-		l.stdLogger.Printf(format, v...)
+	if (l.config.Level & (LogLevelWarn | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+			}
+		}
 	}
 }
 
-// Error format
+// Errorf printing message in custom format at error level
 func (l logger) Errorf(format string, v ...interface{}) {
-	if (l.level & (LogLevelErr | LogLevelDebug)) != 0 {
-		l.stdLogger.Printf(format, v...)
+	if (l.config.Level & (LogLevelErr | LogLevelDebug)) != 0 {
+		if len(v) > 0 {
+			if c, ok := v[0].(context.Context); ok {
+				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+			} else {
+				l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+			}
+		}
 	}
 }
