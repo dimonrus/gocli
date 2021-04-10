@@ -13,7 +13,7 @@ const (
 	LogLevelWarn
 	LogLevelErr
 
-	DefaultCallDepth = 2
+	DefaultCallDepth = 3
 
 	DefaultKeyLoggerPrefix = "prefix"
 )
@@ -21,6 +21,7 @@ const (
 // Logger Common logger interface
 type Logger interface {
 	GetConfig() LoggerConfig
+	Output(callDepth int, message string) error
 
 	Print(v ...interface{})
 	Println(v ...interface{})
@@ -92,13 +93,18 @@ func (l logger) GetConfig() LoggerConfig {
 	return l.config
 }
 
+// Output printing message
+func (l logger) Output(callDepth int, message string) error {
+	return l.stdLogger.Output(callDepth, message)
+}
+
 // Print printing message
 func (l logger) Print(v ...interface{}) {
 	if len(v) > 0 {
 		if c, ok := v[0].(context.Context); ok {
-			l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+			l.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
 		} else {
-			l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+			l.Output(l.config.Depth, fmt.Sprint(v...))
 		}
 	}
 }
@@ -108,9 +114,9 @@ func (l logger) Info(v ...interface{}) {
 	if (l.config.Level & (LogLevelInfo | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+				l.Output(l.config.Depth, fmt.Sprint(v...))
 			}
 		}
 	}
@@ -121,9 +127,9 @@ func (l logger) Warn(v ...interface{}) {
 	if (l.config.Level & (LogLevelWarn | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+				l.Output(l.config.Depth, fmt.Sprint(v...))
 			}
 		}
 	}
@@ -134,9 +140,9 @@ func (l logger) Error(v ...interface{}) {
 	if (l.config.Level & (LogLevelErr | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c)+fmt.Sprint(v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprint(v...))
+				l.Output(l.config.Depth, fmt.Sprint(v...))
 			}
 		}
 	}
@@ -146,9 +152,9 @@ func (l logger) Error(v ...interface{}) {
 func (l logger) Println(v ...interface{}) {
 	if len(v) > 0 {
 		if c, ok := v[0].(context.Context); ok {
-			l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+			l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
 		} else {
-			l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+			l.Output(l.config.Depth, fmt.Sprintln(v...))
 		}
 	}
 }
@@ -158,9 +164,9 @@ func (l logger) Infoln(v ...interface{}) {
 	if (l.config.Level & (LogLevelInfo | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+				l.Output(l.config.Depth, fmt.Sprintln(v...))
 			}
 		}
 	}
@@ -171,9 +177,9 @@ func (l logger) Warnln(v ...interface{}) {
 	if (l.config.Level & (LogLevelWarn | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+				l.Output(l.config.Depth, fmt.Sprintln(v...))
 			}
 		}
 	}
@@ -184,9 +190,9 @@ func (l logger) Errorln(v ...interface{}) {
 	if (l.config.Level & (LogLevelErr | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintln(v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprintln(v...))
+				l.Output(l.config.Depth, fmt.Sprintln(v...))
 			}
 		}
 	}
@@ -196,9 +202,9 @@ func (l logger) Errorln(v ...interface{}) {
 func (l logger) Printf(format string, v ...interface{}) {
 	if len(v) > 0 {
 		if c, ok := v[0].(context.Context); ok {
-			l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+			l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
 		} else {
-			l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+			l.Output(l.config.Depth, fmt.Sprintf(format, v...))
 		}
 	}
 }
@@ -208,9 +214,9 @@ func (l logger) Infof(format string, v ...interface{}) {
 	if (l.config.Level & (LogLevelInfo | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+				l.Output(l.config.Depth, fmt.Sprintf(format, v...))
 			}
 		}
 	}
@@ -221,9 +227,9 @@ func (l logger) Warnf(format string, v ...interface{}) {
 	if (l.config.Level & (LogLevelWarn | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+				l.Output(l.config.Depth, fmt.Sprintf(format, v...))
 			}
 		}
 	}
@@ -234,9 +240,9 @@ func (l logger) Errorf(format string, v ...interface{}) {
 	if (l.config.Level & (LogLevelErr | LogLevelDebug)) != 0 {
 		if len(v) > 0 {
 			if c, ok := v[0].(context.Context); ok {
-				l.stdLogger.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
+				l.Output(l.config.Depth, l.config.Format.FromContext(c) + fmt.Sprintf(format, v[1:]...))
 			} else {
-				l.stdLogger.Output(l.config.Depth, fmt.Sprintf(format, v...))
+				l.Output(l.config.Depth, fmt.Sprintf(format, v...))
 			}
 		}
 	}
