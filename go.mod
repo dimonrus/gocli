@@ -1,9 +1,9 @@
 module github.com/dimonrus/gocli
 
-go 1.14
+go 1.18
 
 require (
-	github.com/dimonrus/gohelp v0.4.0
-	github.com/dimonrus/porterr v1.10.1
-	gopkg.in/yaml.v2 v2.2.7
+	github.com/dimonrus/gohelp v1.1.0
+	github.com/dimonrus/porterr v1.10.2
+	gopkg.in/yaml.v2 v2.4.0
 )
