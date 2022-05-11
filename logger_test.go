@@ -24,17 +24,18 @@ func TestLog_Print(t *testing.T) {
 	l.Print(ctx, "hi all")
 	l.Println(ctx, "hi all")
 	l.Printf("someone %s", ctx1, "hi all")
-
 	l.Warnf("someone %s", "hi all")
+	l.Warnf("show the line")
 }
 
 // BenchmarkDefaultLogger-4   	   99524	     10322 ns/op
 func BenchmarkDefaultLogger(b *testing.B) {
-	l := log.New(os.Stdout, "Tester: ", log.Ldate | log.Ltime | log.Lshortfile)
+	l := log.New(os.Stdout, "Tester: ", log.Ldate|log.Ltime|log.Lshortfile)
 	for i := 0; i < b.N; i++ {
 		l.Println("xid: 24234234234", "rightId: 1")
 	}
 }
+
 // BenchmarkLogger-4   	   94099	     11406 ns/op
 func BenchmarkLogger(b *testing.B) {
 	l := NewLogger(LoggerConfig{Format: LoggerFormat{
