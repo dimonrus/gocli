@@ -9,7 +9,7 @@ import (
 
 func TestLog_Print(t *testing.T) {
 	cfg := LoggerConfig{
-		Level: LogLevelErr | LogLevelWarn | LogLevelInfo,
+		Level: LogLevelErr,
 		Format: map[string]string{
 			DefaultKeyLoggerPrefix: "Tester:",
 			"x-trace-id":           "xid: %s",
@@ -26,6 +26,7 @@ func TestLog_Print(t *testing.T) {
 	l.Printf("someone %s", ctx1, "hi all")
 	l.Warnf("someone %s", "hi all")
 	l.Warnf("show the line")
+	l.Errorln(ctx, "show error")
 }
 
 // BenchmarkDefaultLogger-4   	   99524	     10322 ns/op
@@ -44,6 +45,7 @@ func BenchmarkLogger(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		l.Println("xid: 24234234234", "rightId: 1")
 	}
+	b.ReportAllocs()
 }
 
 // BenchmarkContextLogger-4   	  102255	     10820 ns/op

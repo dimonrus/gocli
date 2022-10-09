@@ -76,9 +76,15 @@ type LoggerConfig struct {
 
 // NewLogger Init logger struct
 func NewLogger(config LoggerConfig) Logger {
-	config.Depth = config.Depth | DefaultCallDepth
-	config.Level = config.Level | LogLevelDebug
-	config.Flags = config.Flags | log.Ldate | log.Ltime | log.Lshortfile
+	if config.Depth == 0 {
+		config.Depth = DefaultCallDepth
+	}
+	if config.Level == 0 {
+		config.Level = LogLevelDebug
+	}
+	if config.Flags == 0 {
+		config.Flags = log.Ldate | log.Ltime | log.Lshortfile
+	}
 	return &logger{config: config, stdLogger: log.New(os.Stdout, config.Format.String(), config.Flags)}
 }
 
