@@ -9,7 +9,6 @@ import (
 	"github.com/dimonrus/porterr"
 	"gopkg.in/yaml.v2"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -22,6 +21,13 @@ const (
 	CommandSessionHost = "localhost"
 	CommandSessionPort = "8080"
 	CommandSessionType = "tcp"
+)
+
+var (
+	// Depends config files
+	RegExpDepends, _ = regexp.Compile(`depends:(.*)`)
+	// ENV variables in config
+	RegExpENV, _ = regexp.Compile(`\$\{(.*)\}`)
 )
 
 // DNApp Dynamic Name Application
@@ -140,19 +146,26 @@ func (a DNApp) FailMessage(message string, command ...*Command) {
 
 // ParseConfig parse config depends on env
 func (a *DNApp) ParseConfig(env string) Application {
-	data, err := ioutil.ReadFile(a.GetConfigPath(env))
+	data, err := os.ReadFile(a.GetConfigPath(env))
 	if err != nil {
 		a.FatalError(err)
 	}
+	content := string(data)
 	// check if config has depends on other configs
-	r, _ := regexp.Compile(`depends:(.*)`)
-	matches := r.FindStringSubmatch(string(data))
+	matches := RegExpDepends.FindStringSubmatch(content)
 	if len(matches) > 1 && strings.TrimSpace(matches[1]) != "" {
 		// load parent config
 		a.ParseConfig(strings.TrimSpace(matches[1]))
 	}
+	envMatches := RegExpENV.FindAllStringSubmatch(content, -1)
+	for _, m := range envMatches {
+		v, ok := os.LookupEnv(m[1])
+		if ok {
+			content = strings.ReplaceAll(content, m[0], v)
+		}
+	}
 	// unmarshal config file in config struct
-	err = yaml.Unmarshal(data, a.config.values)
+	err = yaml.Unmarshal([]byte(content), a.config.values)
 	if err != nil {
 		a.FatalError(err)
 	}

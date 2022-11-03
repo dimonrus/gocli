@@ -1,4 +1,5 @@
 depends: qa
 web:
-  port: 8000
+  port: ${WEB_PORT}
+  host: ${WEB_HOST}
 

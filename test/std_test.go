@@ -25,14 +25,15 @@ func TestServerApp(t *testing.T) {
 	var config Config
 	environment := os.Getenv("ENV")
 	if environment == "" {
-		panic("ENV is not defined")
+		environment = "local"
 	}
 
 	rootPath, err := filepath.Abs("")
 	if err != nil {
 		panic(err)
 	}
-
+	_ = os.Setenv("WEB_PORT", "8000")
+	_ = os.Setenv("WEB_HOST", "0.0.0.0")
 	app := gocli.NewApplication(environment, rootPath+"/config/yaml", &config)
 	app.ParseFlags(&config.Arguments)
 
@@ -45,7 +46,7 @@ func TestServerApp(t *testing.T) {
 	fmt.Println(p)
 
 	value := appType.GetString()
-	cos := make(chan bool)
+	exit := make(chan struct{})
 
 	value = ApplicationTypeWeb
 
@@ -67,14 +68,17 @@ func TestServerApp(t *testing.T) {
 	if config.Web.Port != 8000 {
 		app.FatalError(errors.New("incorrect port"))
 	}
+	if config.Web.Host != "0.0.0.0" {
+		app.FatalError(errors.New("incorrect host"))
+	}
 
 	go func() {
 		err = app.Start(":3333", func(command *gocli.Command) {
 			v := command.Arguments()[0]
-			app.SuccessMessage("Receive command: " + command.String(), command)
+			app.SuccessMessage("Receive command: "+command.String(), command)
 			if v.Name == "exit" {
 				app.AttentionMessage("Exit...", command)
-				cos <- true
+				exit <- struct{}{}
 			} else if v.Name == "show" {
 				app.AttentionMessage(gohelp.AnsiYellow+"The show is began"+gohelp.AnsiReset, command)
 			} else {
@@ -82,7 +86,7 @@ func TestServerApp(t *testing.T) {
 			}
 		})
 	}()
-	<-cos
+	<-exit
 	app.GetLogger().Infoln("Server shutdown.")
 }
 
