@@ -17,8 +17,9 @@ const (
 )
 
 var (
-	ignored  = []rune{' ', '\n', '\t', '\r', '-'}
+	ignored  = []rune{' ', '\n', '\t', '\r'}
 	assigned = '='
+	dash     = '-'
 )
 
 // Command is an argument list
@@ -112,6 +113,9 @@ func ParseCommand(command []byte) *Command {
 			if assigned == rune(c) {
 				isAssignee = true
 			}
+		}
+		if word == nil && rune(c) == dash {
+			isIgnored = true
 		}
 		if !isIgnored && !isAssignee {
 			word = append(word, c)

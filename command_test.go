@@ -25,6 +25,10 @@ func TestParseCommand(t *testing.T) {
 	if len(command.Arguments()) != 6 {
 		t.Fatal("wrong command parsing")
 	}
+	command = ParseCommand([]byte("docker restart some-goods-1"))
+	if len(command.Arguments()) != 3 {
+		t.Fatal("wrong command parsing some-goods-1")
+	}
 	fmt.Println(command.String())
 }
 
