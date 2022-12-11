@@ -59,7 +59,7 @@ func NewApplication(env string, configPath string, values interface{}) Applicati
 }
 
 // GetConfig Get config struct
-func (a DNApp) GetConfig() interface{} {
+func (a *DNApp) GetConfig() interface{} {
 	return a.config.values
 }
 
@@ -70,12 +70,12 @@ func (a *DNApp) SetConfig(cfg interface{}) Application {
 }
 
 // GetConfigPath Get full path to config
-func (a DNApp) GetConfigPath(env string) string {
+func (a *DNApp) GetConfigPath(env string) string {
 	return fmt.Sprintf("%s/%s.yaml", a.config.path, env)
 }
 
 // GetAbsolutePath Get absolute path to application
-func (a DNApp) GetAbsolutePath(path string, dir string) (string, porterr.IError) {
+func (a *DNApp) GetAbsolutePath(path string, dir string) (string, porterr.IError) {
 	rootPath, err := filepath.Abs("")
 	if err != nil {
 		return "", porterr.New(porterr.PortErrorArgument, "root path is incorrect")
@@ -87,7 +87,7 @@ func (a DNApp) GetAbsolutePath(path string, dir string) (string, porterr.IError)
 }
 
 // FatalError Fatal error
-func (a DNApp) FatalError(err error) {
+func (a *DNApp) FatalError(err error) {
 	panic(err)
 }
 
@@ -106,7 +106,7 @@ func (a *DNApp) SetLogger(logger Logger) {
 }
 
 // SuccessMessage printing success message
-func (a DNApp) SuccessMessage(message string, command ...*Command) {
+func (a *DNApp) SuccessMessage(message string, command ...*Command) {
 	message = gohelp.AnsiGreen + message + gohelp.AnsiReset
 	a.GetLogger().Output(DefaultCallDepth, message)
 	for _, c := range command {
@@ -119,7 +119,7 @@ func (a DNApp) SuccessMessage(message string, command ...*Command) {
 }
 
 // AttentionMessage printing attention message
-func (a DNApp) AttentionMessage(message string, command ...*Command) {
+func (a *DNApp) AttentionMessage(message string, command ...*Command) {
 	message = gohelp.AnsiCyan + message + gohelp.AnsiReset
 	a.GetLogger().Output(DefaultCallDepth, message)
 	for _, c := range command {
@@ -132,7 +132,7 @@ func (a DNApp) AttentionMessage(message string, command ...*Command) {
 }
 
 // FailMessage printing fail message
-func (a DNApp) FailMessage(message string, command ...*Command) {
+func (a *DNApp) FailMessage(message string, command ...*Command) {
 	message = gohelp.AnsiRed + message + gohelp.AnsiReset
 	a.GetLogger().Output(DefaultCallDepth, message)
 	for _, c := range command {
@@ -173,7 +173,7 @@ func (a *DNApp) ParseConfig(env string) Application {
 }
 
 // ParseFlags parse console arguments
-func (a DNApp) ParseFlags(args *Arguments) {
+func (a *DNApp) ParseFlags(args *Arguments) {
 	for key, argument := range *args {
 		argument.Name = key
 		switch argument.Type {
@@ -206,7 +206,7 @@ func (a DNApp) ParseFlags(args *Arguments) {
 }
 
 // Start run application
-func (a DNApp) Start(address string, callback func(command *Command)) porterr.IError {
+func (a *DNApp) Start(address string, callback func(command *Command)) porterr.IError {
 	if address == "" {
 		return porterr.NewF(porterr.PortErrorArgument, "address is required")
 	}
