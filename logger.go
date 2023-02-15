@@ -20,7 +20,6 @@ const (
 
 // Logger Common logger interface
 type Logger interface {
-	GetConfig() LoggerConfig
 	Output(callDepth int, message string) error
 
 	Print(v ...interface{})
@@ -92,11 +91,6 @@ func NewLogger(config LoggerConfig) Logger {
 type logger struct {
 	config    LoggerConfig
 	stdLogger *log.Logger
-}
-
-// GetConfig return logger config
-func (l logger) GetConfig() LoggerConfig {
-	return l.config
 }
 
 // Output printing message
