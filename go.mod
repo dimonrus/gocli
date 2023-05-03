@@ -5,5 +5,5 @@ go 1.18
 require (
 	github.com/dimonrus/gohelp v1.1.1
 	github.com/dimonrus/porterr v1.13.1
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )

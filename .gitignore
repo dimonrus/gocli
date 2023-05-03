@@ -1,2 +1,5 @@
 .idea/
 vendor/
+.DS_Store
+test/.DS_Store
+test/config/.DS_Store
