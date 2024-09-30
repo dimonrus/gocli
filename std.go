@@ -162,6 +162,8 @@ func (a *DNApp) ParseConfig(env string) Application {
 		v, ok := os.LookupEnv(m[1])
 		if ok {
 			content = strings.ReplaceAll(content, m[0], v)
+		} else {
+			a.FailMessage("Environment: " + m[1] + " is not defined")
 		}
 	}
 	// unmarshal config file in config struct
