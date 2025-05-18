@@ -10,6 +10,24 @@ func TestParseCommand(t *testing.T) {
 	if len(command.Arguments()) != 6 {
 		t.Fatal("wrong command parsing")
 	}
+	if *command.arguments[0].Value.(*string) != "app" {
+		t.Fatal("wrong parser")
+	}
+	if *command.arguments[1].Value.(*string) != "script" {
+		t.Fatal("wrong parser")
+	}
+	if *command.arguments[2].Value.(*string) != "name" {
+		t.Fatal("wrong parser")
+	}
+	if *command.arguments[3].Value.(*string) != "migration" {
+		t.Fatal("wrong parser")
+	}
+	if *command.arguments[4].Value.(*string) != "class" {
+		t.Fatal("wrong parser")
+	}
+	if *command.arguments[5].Value.(*string) != "one" {
+		t.Fatal("wrong parser")
+	}
 	command = ParseCommand([]byte("-consumer stop=all\n"))
 	if len(command.Arguments()) != 3 {
 		t.Fatal("wrong command parsing")

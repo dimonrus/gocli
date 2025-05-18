@@ -96,7 +96,7 @@ func (c *Command) String() string {
 // ParseCommand Parse command
 func ParseCommand(command []byte) *Command {
 	var isIgnored, isAssignee bool
-	var word []byte
+	var word = make([]byte, 0, 16)
 	var k int
 	var cmd = Command{
 		arguments: make([]Argument, 16),
@@ -114,7 +114,7 @@ func ParseCommand(command []byte) *Command {
 				isAssignee = true
 			}
 		}
-		if word == nil && rune(c) == dash {
+		if len(word) == 0 && rune(c) == dash {
 			isIgnored = true
 		}
 		if !isIgnored && !isAssignee {
@@ -145,7 +145,7 @@ func ParseCommand(command []byte) *Command {
 			cmd.arguments[k].Value = &cmd.arguments[k].Name
 		}
 		k++
-		word = nil
+		word = word[:0]
 	}
 	cmd.arguments = cmd.arguments[:k]
 	return &cmd
