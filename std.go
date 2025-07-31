@@ -175,29 +175,34 @@ func (a *DNApp) ParseConfig(env string) Application {
 }
 
 // ParseFlags parse console arguments
-func (a *DNApp) ParseFlags(args *Arguments) {
-	for key, argument := range *args {
+func (a *DNApp) ParseFlags(args ArgumentMap) {
+	for key, argument := range args {
 		argument.Name = key
 		switch argument.Type {
 		case ArgumentTypeString:
 			var value string
 			argument.Value = &value
-			(*args)[key] = argument
+			args[key] = argument
 			flag.StringVar(&value, key, "", argument.Label)
 		case ArgumentTypeInt:
 			var value int64
 			argument.Value = &value
-			(*args)[key] = argument
+			args[key] = argument
 			flag.Int64Var(&value, key, 0, argument.Label)
 		case ArgumentTypeUint:
 			var value uint64
 			argument.Value = &value
-			(*args)[key] = argument
+			args[key] = argument
 			flag.Uint64Var(&value, key, 0, argument.Label)
+		case ArgumentTypeFloat:
+			var value float64
+			argument.Value = &value
+			args[key] = argument
+			flag.Float64Var(&value, key, 0, argument.Label)
 		case ArgumentTypeBool:
 			var value bool
 			argument.Value = &value
-			(*args)[key] = argument
+			args[key] = argument
 			flag.BoolVar(&value, key, false, argument.Label)
 		default:
 			a.FatalError(errors.New("argument type: " + argument.Type + " is not supported. Argument: " + argument.Label))

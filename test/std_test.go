@@ -35,7 +35,7 @@ func TestServerApp(t *testing.T) {
 	_ = os.Setenv("WEB_PORT", "8000")
 	_ = os.Setenv("WEB_HOST", "0.0.0.0")
 	app := gocli.NewApplication(environment, rootPath+"/config/yaml", &config)
-	app.ParseFlags(&config.Arguments)
+	app.ParseFlags(config.Arguments)
 
 	appType, ok := config.Arguments["app"]
 	if ok != true {

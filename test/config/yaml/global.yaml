@@ -20,4 +20,7 @@ arguments:
     label: count
   success:
     type: bool
-    lable: success
+    label: success
+  part:
+    type: float
+    label: percent

@@ -36,7 +36,7 @@ func TestParseCommand(t *testing.T) {
 	if len(command.Arguments()) != 5 {
 		t.Fatal("wrong command parsing")
 	}
-	if command.Arguments()[2].Type != ArgumentTypeInt {
+	if command.Arguments()[2].Type != ArgumentTypeUint {
 		t.Fatal("must be int")
 	}
 	command = ParseCommand([]byte("web     repeat=2\n always 	 true\t false"))
@@ -64,12 +64,16 @@ func TestParseCommand2(t *testing.T) {
 	}
 }
 
+// goos: darwin
+// goarch: arm64
+// pkg: github.com/dimonrus/gocli
+// cpu: Apple M2 Max
+// BenchmarkParseCommand
+// BenchmarkParseCommand-12    	 2019850	       597.0 ns/op	    1376 B/op	      14 allocs/op
 func BenchmarkParseCommand(b *testing.B) {
 	com := []byte("-app=script name=migration --class one")
-	var command *Command
 	for i := 0; i < b.N; i++ {
-		command = ParseCommand(com)
+		ParseCommand(com)
 	}
-	_ = command
 	b.ReportAllocs()
 }

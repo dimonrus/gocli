@@ -11,5 +11,5 @@ type Config struct {
 		Port int
 		Host string
 	}
-	Arguments gocli.Arguments
+	Arguments gocli.ArgumentMap
 }

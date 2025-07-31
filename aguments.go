@@ -5,10 +5,11 @@ const (
 	ArgumentTypeInt    = "int"
 	ArgumentTypeUint   = "uint"
 	ArgumentTypeBool   = "bool"
+	ArgumentTypeFloat  = "float"
 )
 
-// Arguments Console app arguments
-type Arguments map[string]Argument
+// ArgumentMap Console app arguments
+type ArgumentMap map[string]Argument
 
 // Argument struct
 type Argument struct {
@@ -44,4 +45,27 @@ func (a Argument) GetUnit() uint64 {
 func (a Argument) GetBool() bool {
 	value := a.Value.(*bool)
 	return *value
+}
+
+// GetFloat Get float value of argument
+func (a Argument) GetFloat() float64 {
+	value := a.Value.(*float64)
+	return *value
+}
+
+// Arguments list of arguments
+type Arguments []Argument
+
+// GetByName get argument by name
+func (a *Arguments) GetByName(name string) *Argument {
+	if a == nil {
+		return nil
+	}
+	for i := range *a {
+		argument := (*a)[i]
+		if argument.Name == name {
+			return &argument
+		}
+	}
+	return nil
 }

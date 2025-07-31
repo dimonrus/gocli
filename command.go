@@ -25,7 +25,7 @@ var (
 // Command is an argument list
 type Command struct {
 	// list of arguments
-	arguments []Argument
+	arguments Arguments
 	// net connection
 	connection net.Conn
 	// original command
@@ -69,7 +69,7 @@ func (c *Command) UnbindConnection() {
 }
 
 // Arguments command arguments
-func (c *Command) Arguments() []Argument {
+func (c *Command) Arguments() Arguments {
 	c.m.RLock()
 	defer c.m.RUnlock()
 	return c.arguments
@@ -98,9 +98,9 @@ func ParseCommand(command []byte) *Command {
 	var isIgnored, isAssignee bool
 	var word = make([]byte, 0, 16)
 	var k int
-	var cmd = Command{
-		arguments: make([]Argument, 16),
+	cmd := Command{
 		origin:    command,
+		arguments: make(Arguments, 8),
 	}
 	var l = len(command) - 1
 	for j, c := range command {
@@ -127,23 +127,37 @@ func ParseCommand(command []byte) *Command {
 				continue
 			}
 		}
-		if k >= len(cmd.arguments) {
-			cmd.arguments = append(cmd.arguments, make([]Argument, 16)...)
+		if k >= cap(cmd.arguments) {
+			cmd.arguments = append(cmd.arguments, make(Arguments, 8)...)
 		}
-		cmd.arguments[k].Name = string(word)
-		if valueInt64, err := strconv.ParseInt(cmd.arguments[k].Name, 10, 64); err == nil {
-			cmd.arguments[k].Type = ArgumentTypeInt
-			cmd.arguments[k].Value = &valueInt64
-		} else if valueBool, err := strconv.ParseBool(cmd.arguments[k].Name); err == nil {
-			cmd.arguments[k].Type = ArgumentTypeBool
-			cmd.arguments[k].Value = &valueBool
-		} else if valueUint64, err := strconv.ParseUint(cmd.arguments[k].Name, 10, 64); err == nil {
-			cmd.arguments[k].Type = ArgumentTypeUint
-			cmd.arguments[k].Value = &valueUint64
-		} else {
+		isUint, isInt, isFloat, isBool, isString := gohelp.CheckTypeOf(word)
+		value := string(word)
+		switch true {
+		case isUint:
+			if valueUint64, err := strconv.ParseUint(value, 10, 64); err == nil {
+				cmd.arguments[k].Type = ArgumentTypeUint
+				cmd.arguments[k].Value = &valueUint64
+			}
+		case isInt:
+			if valueInt64, err := strconv.ParseInt(value, 10, 64); err == nil {
+				cmd.arguments[k].Type = ArgumentTypeInt
+				cmd.arguments[k].Value = &valueInt64
+			}
+		case isFloat:
+			if valueFloat64, err := strconv.ParseFloat(value, 64); err == nil {
+				cmd.arguments[k].Type = ArgumentTypeFloat
+				cmd.arguments[k].Value = &valueFloat64
+			}
+		case isBool:
+			if valueBool, err := strconv.ParseBool(value); err == nil {
+				cmd.arguments[k].Type = ArgumentTypeBool
+				cmd.arguments[k].Value = &valueBool
+			}
+		case isString:
 			cmd.arguments[k].Type = ArgumentTypeString
-			cmd.arguments[k].Value = &cmd.arguments[k].Name
+			cmd.arguments[k].Value = &value
 		}
+		cmd.arguments[k].Name = value
 		k++
 		word = word[:0]
 	}

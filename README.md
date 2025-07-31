@@ -40,6 +40,9 @@ Features
       success:
         type: bool
         lable: success
+      part:
+        type: float
+        label: percent
     ```
    _local.yaml_
     ```

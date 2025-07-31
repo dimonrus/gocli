@@ -29,5 +29,5 @@ type Application interface {
 	// FailMessage Fail log message with command repeat
 	FailMessage(message string, command ...*Command)
 	// ParseFlags Parse console flags
-	ParseFlags(args *Arguments)
+	ParseFlags(args ArgumentMap)
 }
