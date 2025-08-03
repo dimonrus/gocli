@@ -42,3 +42,23 @@ func TestArguments_GetByName(t *testing.T) {
 		}
 	})
 }
+
+func TestArgumentMap_ToList(t *testing.T) {
+	am := ArgumentMap{
+		"count": {
+			Type:  "int",
+			Value: gohelp.Ptr(10),
+			Label: "Number",
+		},
+		"name": {
+			Type:  "string",
+			Value: gohelp.Ptr("some"),
+			Label: "Name",
+		},
+	}
+	list := am.ToList()
+	nameArgument := list.GetByName("name")
+	if nameArgument == nil || nameArgument.Name != "name" {
+		t.Fatal("wrong logic")
+	}
+}

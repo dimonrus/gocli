@@ -11,6 +11,17 @@ const (
 // ArgumentMap Console app arguments
 type ArgumentMap map[string]Argument
 
+// ToList Convert to argument list
+func (a ArgumentMap) ToList() (list Arguments) {
+	for s, argument := range a {
+		if argument.Name == "" {
+			argument.Name = s
+		}
+		list = append(list, argument)
+	}
+	return
+}
+
 // Argument struct
 type Argument struct {
 	// Type of argument
@@ -57,12 +68,12 @@ func (a Argument) GetFloat() float64 {
 type Arguments []Argument
 
 // GetByName get argument by name
-func (a *Arguments) GetByName(name string) *Argument {
+func (a Arguments) GetByName(name string) *Argument {
 	if a == nil {
 		return nil
 	}
-	for i := range *a {
-		argument := (*a)[i]
+	for i := range a {
+		argument := a[i]
 		if argument.Name == name {
 			return &argument
 		}
