@@ -5,9 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/dimonrus/gohelp"
-	"github.com/dimonrus/porterr"
-	"gopkg.in/yaml.v3"
 	"io"
 	"net"
 	"os"
@@ -15,6 +12,10 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/dimonrus/gohelp"
+	"github.com/dimonrus/porterr"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -108,7 +109,7 @@ func (a *DNApp) SetLogger(logger Logger) {
 // SuccessMessage printing success message
 func (a *DNApp) SuccessMessage(message string, command ...*Command) {
 	message = gohelp.AnsiGreen + message + gohelp.AnsiReset
-	a.GetLogger().Output(DefaultCallDepth, message)
+	_ = a.GetLogger().Output(DefaultCallDepth, message)
 	for _, c := range command {
 		e := c.Result([]byte(message + "\n"))
 		if e != nil {
@@ -121,7 +122,7 @@ func (a *DNApp) SuccessMessage(message string, command ...*Command) {
 // AttentionMessage printing attention message
 func (a *DNApp) AttentionMessage(message string, command ...*Command) {
 	message = gohelp.AnsiCyan + message + gohelp.AnsiReset
-	a.GetLogger().Output(DefaultCallDepth, message)
+	_ = a.GetLogger().Output(DefaultCallDepth, message)
 	for _, c := range command {
 		e := c.Result([]byte(message + "\n"))
 		if e != nil {
@@ -134,7 +135,7 @@ func (a *DNApp) AttentionMessage(message string, command ...*Command) {
 // FailMessage printing fail message
 func (a *DNApp) FailMessage(message string, command ...*Command) {
 	message = gohelp.AnsiRed + message + gohelp.AnsiReset
-	a.GetLogger().Output(DefaultCallDepth, message)
+	_ = a.GetLogger().Output(DefaultCallDepth, message)
 	for _, c := range command {
 		e := c.Result([]byte(message + "\n"))
 		if e != nil {
